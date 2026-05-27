@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Orçamentos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --ink:#0f1117;--ink2:#1c2030;--ink3:#252b3b;
+  --line:#2e3447;--line2:#3b4260;
+  --muted:#7b839e;--ghost:#4a5168;
+  --white:#f4f5f8;--white2:#e8eaf0;
+  --gold:#c9a84c;--gold2:#e8c96a;--goldbg:rgba(201,168,76,.10);
+  --green:#3ecf8e;--greenbg:rgba(62,207,142,.10);
+  --red:#f16363;--redbg:rgba(241,99,99,.10);
+  --blue:#5b8ef0;--bluebg:rgba(91,142,240,.10);
+  --amber:#f5a623;--amberbg:rgba(245,166,35,.10);
+  --r:12px;--r2:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--white);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-size:128px;pointer-events:none;z-index:0}
+body>*{position:relative;z-index:1}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--ink2)}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+
+/* HEADER */
+.hdr{background:var(--ink2);border-bottom:1px solid var(--line);padding:0 32px;display:flex;align-items:center;gap:16px;height:64px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:grid;place-items:center;font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);box-shadow:0 4px 12px rgba(201,168,76,.35);flex-shrink:0}
+.logo-text{font-size:15px;font-weight:600;color:var(--white);letter-spacing:-.01em}
+.logo-sub{font-size:11px;color:var(--muted)}
+.hdr-mid{flex:1;display:flex;gap:8px}
+.hdr-chip{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;background:var(--ink3);border:1px solid var(--line);color:var(--muted)}
+.hdr-chip b{color:var(--gold);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--line);background:var(--ink3);color:var(--muted);transition:all .18s;white-space:nowrap}
+.btn:hover{border-color:var(--line2);color:var(--white)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:transparent;color:var(--ink);font-weight:600;box-shadow:0 4px 14px rgba(201,168,76,.3)}
+.btn-gold:hover{box-shadow:0 6px 20px rgba(201,168,76,.45);transform:translateY(-1px);color:var(--ink)}
+input[type=file]{display:none}
+
+/* TABS */
+.tabs{background:var(--ink2);border-bottom:1px solid var(--line);padding:0 32px;display:flex}
+.tab{padding:0 20px;height:46px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;transition:all .18s}
+.tab:hover{color:var(--white2)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-badge{font-size:10px;font-weight:700;background:var(--ink3);color:var(--muted);padding:1px 7px;border-radius:20px;border:1px solid var(--line);transition:.18s}
+.tab.active .tab-badge{background:var(--goldbg);color:var(--gold);border-color:rgba(201,168,76,.3)}
+
+/* LAYOUT */
+.wrap{max-width:1480px;margin:0 auto;padding:28px 32px}
+.pane{display:none}
+.pane.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* EMPTY STATE (before import) */
+.splash{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:20px}
+.splash-icon{font-size:56px;opacity:.3}
+.splash-title{font-size:20px;font-weight:500;color:var(--muted)}
+.splash-sub{font-size:13px;color:var(--ghost);max-width:360px;line-height:1.6}
+
+/* FILTERS */
+.fbar{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:12px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.fbar-icon{font-size:16px;color:var(--gold)}
+.fg{display:flex;align-items:center;gap:8px}
+.fl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ghost);white-space:nowrap}
+.fbar select{padding:5px 28px 5px 10px;background:var(--ink3);border:1px solid var(--line);border-radius:var(--r2);color:var(--white2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237b839e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:.15s}
+.fbar select:focus{border-color:var(--gold)}
+.fsep{width:1px;height:24px;background:var(--line)}
+.fbadge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--goldbg);color:var(--gold);border:1px solid rgba(201,168,76,.25)}
+.bclear{font-size:11px;font-weight:500;border:none;background:none;color:var(--ghost);cursor:pointer;padding:4px 8px;border-radius:6px;transition:.15s;font-family:'DM Sans',sans-serif}
+.bclear:hover{background:var(--redbg);color:var(--red)}
+
+/* KPIS */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px 16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--r) 0 0 var(--r)}
+.kpi::after{content:'';position:absolute;inset:0}
+.kpi.gold::before{background:linear-gradient(180deg,var(--gold),var(--gold2))}.kpi.gold::after{background:radial-gradient(circle at 90% 10%,rgba(201,168,76,.06),transparent 60%)}
+.kpi.green::before{background:var(--green)}.kpi.green::after{background:radial-gradient(circle at 90% 10%,rgba(62,207,142,.06),transparent 60%)}
+.kpi.red::before{background:var(--red)}.kpi.red::after{background:radial-gradient(circle at 90% 10%,rgba(241,99,99,.06),transparent 60%)}
+.kpi.blue::before{background:var(--blue)}.kpi.blue::after{background:radial-gradient(circle at 90% 10%,rgba(91,142,240,.06),transparent 60%)}
+.kpi.amber::before{background:var(--amber)}.kpi.amber::after{background:radial-gradient(circle at 90% 10%,rgba(245,166,35,.06),transparent 60%)}
+.kpi.grey::before{background:var(--ghost)}
+.kpi-inner{position:relative;z-index:1}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.kpi-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ghost);line-height:1.4}
+.kpi-ico{font-size:18px;opacity:.7}
+.kpi-val{font-size:26px;font-weight:300;letter-spacing:-.02em;line-height:1;margin-bottom:4px}
+.kpi.gold .kpi-val{color:var(--gold)}.kpi.green .kpi-val{color:var(--green)}.kpi.red .kpi-val{color:var(--red)}.kpi.blue .kpi-val{color:var(--blue)}.kpi.amber .kpi-val{color:var(--amber)}.kpi.grey .kpi-val{color:var(--muted)}
+.kpi-sub{font-size:11px;color:var(--ghost)}
+
+/* CHARTS */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.cc{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;transition:.2s}
+.cc:hover{border-color:var(--line2)}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ct{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.cbadge{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--ink3);color:var(--ghost);padding:2px 8px;border-radius:4px;border:1px solid var(--line)}
+.leg{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;font-size:11px;color:var(--ghost)}
+.leg span{display:flex;align-items:center;gap:6px}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.cg-33{grid-template-columns:2fr 1fr}
+
+/* TABLES */
+.tc{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:24px}
+.th{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,var(--ink3),var(--ink2))}
+.tt{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--ink3);padding:10px 16px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ghost);border-bottom:1px solid var(--line);white-space:nowrap}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--white2)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.025)}
+.rank-num{width:26px;height:26px;border-radius:7px;display:inline-grid;place-items:center;font-size:11px;font-weight:700;background:var(--ink3);color:var(--ghost);border:1px solid var(--line)}
+.rank-num.g1{background:var(--goldbg);color:var(--gold);border-color:rgba(201,168,76,.3)}
+.rank-num.g2{background:rgba(192,192,220,.08);color:#b0b8cc;border-color:rgba(180,180,200,.2)}
+.rank-num.g3{background:rgba(180,120,60,.08);color:#c09060;border-color:rgba(180,120,60,.2)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.pill-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.pg{background:var(--greenbg);color:var(--green);border:1px solid rgba(62,207,142,.2)}.pg .pill-dot{background:var(--green)}
+.pr{background:var(--redbg);color:var(--red);border:1px solid rgba(241,99,99,.2)}.pr .pill-dot{background:var(--red)}
+.pag{background:var(--amberbg);color:var(--amber);border:1px solid rgba(245,166,35,.2)}.pag .pill-dot{background:var(--amber)}
+.mono{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.dim{color:var(--ghost)}
+
+@media(max-width:900px){.cg,.cg-33{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.wrap{padding:20px 16px}.hdr,.tabs{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="logo">
+    <div class="logo-mark">O</div>
+    <div><div class="logo-text">Orçamentos</div><div class="logo-sub">Dashboard Executivo</div></div>
+  </div>
+  <div class="hdr-mid">
+    <span class="hdr-chip" id="chip-p">Proposta: <b>—</b></span>
+    <span class="hdr-chip" id="chip-o">Oportunidades: <b>—</b></span>
+  </div>
+  <button class="btn btn-gold" onclick="document.getElementById('fi').click()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Importar Planilha
+  </button>
+  <input type="file" id="fi" accept=".xlsx,.xls" onchange="importExcel(event)">
+</header>
+
+<nav class="tabs">
+  <div class="tab active" onclick="switchTab('proposta')">📋 Proposta <span class="tab-badge" id="tb-p">0</span></div>
+  <div class="tab" onclick="switchTab('oportunidades')">🎯 Oportunidades <span class="tab-badge" id="tb-o">0</span></div>
+</nav>
+
+<!-- ══ PROPOSTA ══ -->
+<div id="pane-proposta" class="pane active"><div class="wrap">
+  <div id="p-splash" class="splash">
+    <div class="splash-icon">📋</div>
+    <div class="splash-title">Nenhum dado carregado</div>
+    <div class="splash-sub">Clique em <strong>Importar Planilha</strong> e selecione o arquivo <em>Planilha_Dashboard.xlsx</em></div>
+  </div>
+  <div id="p-content" style="display:none">
+    <div class="fbar">
+      <span class="fbar-icon">◈</span>
+      <div class="fg"><span class="fl">Mês</span>
+        <select id="p-mes" onchange="renderP()">
+          <option value="">Todos</option>
+          <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+          <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+          <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+          <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+        </select>
+      </div>
+      <div class="fg"><span class="fl">Ano</span><select id="p-ano" onchange="renderP()"><option value="">Todos</option></select></div>
+      <div class="fsep"></div>
+      <div class="fg"><span class="fl">Responsável</span><select id="p-resp" onchange="renderP()"><option value="">Todos</option></select></div>
+      <button class="bclear" onclick="clearF('p')">✕ limpar</button>
+      <span class="fbadge" id="p-cnt">0</span>
+    </div>
+    <div class="kpis">
+      <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Total Propostas</div><div class="kpi-ico">📋</div></div><div class="kpi-val" id="p-k1">0</div><div class="kpi-sub">no período</div></div></div>
+      <div class="kpi green"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aprovadas</div><div class="kpi-ico">✅</div></div><div class="kpi-val" id="p-k2">0</div><div class="kpi-sub">no período</div></div></div>
+      <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Reprovadas</div><div class="kpi-ico">❌</div></div><div class="kpi-val" id="p-k3">0</div><div class="kpi-sub">no período</div></div></div>
+      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aguardando</div><div class="kpi-ico">⏳</div></div><div class="kpi-val" id="p-k8">0</div><div class="kpi-sub">sem retorno</div></div></div>
+      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Taxa Aprovação</div><div class="kpi-ico">📊</div></div><div class="kpi-val" id="p-k4">0%</div><div class="kpi-sub">aprov / total</div></div></div>
+      <div class="kpi gold"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Aprovado</div><div class="kpi-ico">💰</div></div><div class="kpi-val" id="p-k5">R$0</div><div class="kpi-sub">total período</div></div></div>
+      <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Reprovado</div><div class="kpi-ico">🚫</div></div><div class="kpi-val" id="p-k6">R$0</div><div class="kpi-sub">total período</div></div></div>
+      <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Dias Médio Aprov.</div><div class="kpi-ico">⏱️</div></div><div class="kpi-val" id="p-k7">0d</div><div class="kpi-sub">até aprovação</div></div></div>
+    </div>
+    <div class="cg cg-33">
+      <div class="cc">
+        <div class="ch"><span class="ct">Resultado por Mês</span><span class="cbadge">MENSAL</span></div>
+        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>Aprovadas</span><span><span class="ld" style="background:#f16363"></span>Reprovadas</span><span><span class="ld" style="background:#f5a623"></span>Aguardando</span></div>
+        <div style="position:relative;height:220px"><canvas id="p-c1"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="ch"><span class="ct">Distribuição</span><span class="cbadge">STATUS</span></div>
+        <div style="position:relative;height:220px"><canvas id="p-c2"></canvas></div>
+      </div>
+    </div>
+    <div class="cg">
+      <div class="cc"><div class="ch"><span class="ct">Valor Aprovado / Mês</span><span class="cbadge">R$</span></div><div style="position:relative;height:190px"><canvas id="p-c3"></canvas></div></div>
+      <div class="cc"><div class="ch"><span class="ct">Valor Reprovado / Mês</span><span class="cbadge">R$</span></div><div style="position:relative;height:190px"><canvas id="p-c4"></canvas></div></div>
+    </div>
+    <div class="cc" style="margin-bottom:24px"><div class="ch"><span class="ct">Dias Médio de Aprovação</span><span class="cbadge">EVOLUÇÃO</span></div><div style="position:relative;height:160px"><canvas id="p-c5"></canvas></div></div>
+    <div class="tc">
+      <div class="th"><span class="tt">🏆 Ranking — Clientes por Valor Aprovado</span><span class="cbadge">TOP 10</span></div>
+      <div class="tw"><table><thead><tr><th>#</th><th>Cliente</th><th>Qtd Aprov.</th><th>Valor Total</th><th>Ticket Médio</th></tr></thead><tbody id="p-rank"></tbody></table></div>
+    </div>
+    <div class="tc">
+      <div class="th"><span class="tt">📄 Detalhamento de Propostas</span></div>
+      <div class="tw"><table><thead><tr><th>#</th><th>NS/Proposta</th><th>Cliente</th><th>Equipamento</th><th>Status</th><th>Valor Aprov.</th><th>Valor Reprov.</th><th>Dias</th><th>Responsável</th><th>Data Envio</th></tr></thead><tbody id="p-tbl"></tbody></table></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ══ OPORTUNIDADES ══ -->
+<div id="pane-oportunidades" class="pane"><div class="wrap">
+  <div id="o-splash" class="splash">
+    <div class="splash-icon">🎯</div>
+    <div class="splash-title">Nenhum dado carregado</div>
+    <div class="splash-sub">Clique em <strong>Importar Planilha</strong> e selecione o arquivo <em>Planilha_Dashboard.xlsx</em></div>
+  </div>
+  <div id="o-content" style="display:none">
+    <div class="fbar">
+      <span class="fbar-icon">◈</span>
+      <div class="fg"><span class="fl">Mês</span>
+        <select id="o-mes" onchange="renderO()">
+          <option value="">Todos</option>
+          <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+          <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+          <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+          <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+        </select>
+      </div>
+      <div class="fg"><span class="fl">Ano</span><select id="o-ano" onchange="renderO()"><option value="">Todos</option></select></div>
+      <div class="fsep"></div>
+      <div class="fg"><span class="fl">Responsável</span><select id="o-resp" onchange="renderO()"><option value="">Todos</option></select></div>
+      <button class="bclear" onclick="clearF('o')">✕ limpar</button>
+      <span class="fbadge" id="o-cnt">0</span>
+    </div>
+    <div class="kpis">
+      <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Total Oportunidades</div><div class="kpi-ico">🎯</div></div><div class="kpi-val" id="o-k1">0</div><div class="kpi-sub">no período</div></div></div>
+      <div class="kpi green"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aprovadas</div><div class="kpi-ico">✅</div></div><div class="kpi-val" id="o-k2">0</div><div class="kpi-sub">no período</div></div></div>
+      <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Reprovadas</div><div class="kpi-ico">❌</div></div><div class="kpi-val" id="o-k3">0</div><div class="kpi-sub">no período</div></div></div>
+      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aguardando</div><div class="kpi-ico">⏳</div></div><div class="kpi-val" id="o-k8">0</div><div class="kpi-sub">sem retorno</div></div></div>
+      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Taxa Conversão</div><div class="kpi-ico">📊</div></div><div class="kpi-val" id="o-k4">0%</div><div class="kpi-sub">aprov / total</div></div></div>
+      <div class="kpi gold"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Aprovado</div><div class="kpi-ico">💰</div></div><div class="kpi-val" id="o-k5">R$0</div><div class="kpi-sub">total período</div></div></div>
+      <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Reprovado</div><div class="kpi-ico">🚫</div></div><div class="kpi-val" id="o-k6">R$0</div><div class="kpi-sub">total período</div></div></div>
+      <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Ciclo Médio Aprov.</div><div class="kpi-ico">⏱️</div></div><div class="kpi-val" id="o-k7">0d</div><div class="kpi-sub">até aprovação</div></div></div>
+    </div>
+    <div class="cg cg-33">
+      <div class="cc">
+        <div class="ch"><span class="ct">Resultado por Mês</span><span class="cbadge">MENSAL</span></div>
+        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>Aprovadas</span><span><span class="ld" style="background:#f16363"></span>Reprovadas</span><span><span class="ld" style="background:#f5a623"></span>Aguardando</span></div>
+        <div style="position:relative;height:220px"><canvas id="o-c1"></canvas></div>
+      </div>
+      <div class="cc">
+        <div class="ch"><span class="ct">Distribuição</span><span class="cbadge">STATUS</span></div>
+        <div style="position:relative;height:220px"><canvas id="o-c2"></canvas></div>
+      </div>
+    </div>
+    <div class="cg">
+      <div class="cc"><div class="ch"><span class="ct">Valor Aprovado / Mês</span><span class="cbadge">R$</span></div><div style="position:relative;height:190px"><canvas id="o-c3"></canvas></div></div>
+      <div class="cc"><div class="ch"><span class="ct">Valor Reprovado / Mês</span><span class="cbadge">R$</span></div><div style="position:relative;height:190px"><canvas id="o-c4"></canvas></div></div>
+    </div>
+    <div class="cc" style="margin-bottom:24px"><div class="ch"><span class="ct">Ciclo Médio de Aprovação</span><span class="cbadge">EVOLUÇÃO</span></div><div style="position:relative;height:160px"><canvas id="o-c5"></canvas></div></div>
+    <div class="tc">
+      <div class="th"><span class="tt">🏆 Ranking — Clientes por Valor Aprovado</span><span class="cbadge">TOP 10</span></div>
+      <div class="tw"><table><thead><tr><th>#</th><th>Cliente</th><th>Qtd Aprov.</th><th>Valor Total</th><th>Ticket Médio</th></tr></thead><tbody id="o-rank"></tbody></table></div>
+    </div>
+    <div class="tc">
+      <div class="th"><span class="tt">📄 Detalhamento de Oportunidades</span></div>
+      <div class="tw"><table><thead><tr><th>#</th><th>NS/Proposta</th><th>Cliente</th><th>Equipamento</th><th>Status</th><th>Valor Aprov.</th><th>Valor Reprov.</th><th>Dias</th><th>Responsável</th><th>Data Abertura</th></tr></thead><tbody id="o-tbl"></tbody></table></div>
+    </div>
+  </div>
+</div></div>
+
+<script>
+// Chart.js defaults
+Chart.defaults.color = '#4a5168';
+Chart.defaults.borderColor = '#2e3447';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+Object.assign(Chart.defaults.plugins.tooltip, {
+  backgroundColor:'#1c2030', borderColor:'#2e3447', borderWidth:1,
+  titleColor:'#f4f5f8', bodyColor:'#7b839e', padding:10, cornerRadius:8
+});
+
+// ── State ──────────────────────────────────────────────────────────────
+let PD = [], OD = [];
+
+// ── Tab ────────────────────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) =>
+    el.classList.toggle('active', ['proposta','oportunidades'][i] === t));
+  document.querySelectorAll('.pane').forEach(el => el.classList.remove('active'));
+  g('pane-'+t).classList.add('active');
+}
+
+// ── Import ─────────────────────────────────────────────────────────────
+function importExcel(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    // cellDates:true → datetime cells come as UTC Date objects
+    const wb = XLSX.read(ev.target.result, { type:'binary', cellDates:true });
+    const find = kw => wb.SheetNames.find(s => s.toLowerCase().includes(kw));
+    const snP = find('proposta'), snO = find('oportunidade');
+    if (!snP && !snO) { alert('Abas "Proposta" e "Oportunidades" não encontradas.'); return; }
+
+    if (snP) {
+      // raw:true preserves Date objects; header row is row index 1 (row 2 in Excel)
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[snP], {header:1, raw:true, defval:null});
+      PD = parseRows(rows, 'proposta');
+      fillFilters('p', PD);
+      g('p-splash').style.display = 'none';
+      g('p-content').style.display = 'block';
+      g('chip-p').innerHTML = `Proposta: <b>${PD.length}</b>`;
+      g('tb-p').textContent = PD.length;
+    }
+    if (snO) {
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[snO], {header:1, raw:true, defval:null});
+      OD = parseRows(rows, 'oportunidades');
+      fillFilters('o', OD);
+      g('o-splash').style.display = 'none';
+      g('o-content').style.display = 'block';
+      g('chip-o').innerHTML = `Oportunidades: <b>${OD.length}</b>`;
+      g('tb-o').textContent = OD.length;
+    }
+    renderP(); renderO();
+  };
+  reader.readAsBinaryString(file);
+  e.target.value = '';
+}
+
+// ── Parse sheet rows ────────────────────────────────────────────────────
+// Structure: row[0]=instruction, row[1]=headers, row[2..]=data
+function parseRows(rows, type) {
+  if (rows.length < 3) return [];
+  const hdr = rows[1].map(h => h != null ? String(h).trim() : '');
+  const out = [];
+
+  for (let i = 2; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.every(c => c === null || c === '')) continue;
+
+    // Build object by column name — robust to column order changes
+    const o = {};
+    hdr.forEach((h, ci) => { if (h) o[h] = r[ci] ?? null; });
+
+    // Skip rows with no date at all
+    const dt = parseDate(o['Data_Envio']);
+    if (!dt) continue;
+
+    const status = normStatus(o['status']);
+
+    // Values
+    // Proposta:      valor_aprovado col[14], valor_reprovado col[15]
+    // Oportunidades: valor_aprovado col[15] (same as Valor_inicial col[5])
+    const vAp = numVal(o['valor_aprovado']) || (type === 'oportunidades' ? numVal(o['Valor_inicial']) : 0);
+    const vRp = numVal(o['valor_reprovado']);
+
+    out.push({
+      ns:          strVal(o['NS/Proposta']),
+      cliente:     strVal(o['Cliente']),
+      equipamento: strVal(o['Equipamento']),
+      responsavel: strVal(o['responsavel']),
+      dataEnvio:   dt,
+      diasEspera:  numVal(o['Dias_espera']),
+      valorAprovado:  vAp,
+      valorReprovado: vRp,
+      status,
+    });
+  }
+  return out;
+}
+
+// ── Date parser ─────────────────────────────────────────────────────────
+// KEY FIX: XLSX cellDates:true delivers dates as UTC midnight.
+// We extract UTC Y/M/D to build a LOCAL date — preventing timezone
+// from shifting the day (e.g. 2026-04-01 00:00 UTC → 2026-03-31 local).
+function parseDate(v) {
+  if (v == null) return null;
+
+  if (v instanceof Date) {
+    if (isNaN(v.getTime())) return null;
+    // Use UTC getters to avoid timezone shift
+    return new Date(v.getUTCFullYear(), v.getUTCMonth(), v.getUTCDate());
+  }
+
+  if (typeof v === 'number') {
+    const tmp = new Date(Math.round((v - 25569) * 86400 * 1000));
+    if (isNaN(tmp.getTime())) return null;
+    return new Date(tmp.getUTCFullYear(), tmp.getUTCMonth(), tmp.getUTCDate());
+  }
+
+  const s = String(v).trim();
+  if (!s || s === 'null') return null;
+
+  // Brazilian strings: "14/7/2025" or "28/08/2025" or "14/04/2026"
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) {
+    let [, dd, mm, yy] = m;
+    if (yy.length === 2) yy = '20' + yy;
+    const d = new Date(+yy, +mm - 1, +dd);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // ISO: "2025-08-28"
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) {
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  return null;
+}
+
+// ── Status normalisation ────────────────────────────────────────────────
+// Proposta:      'Aprovado' | 'Reprovado' | 'Aguardando Aprovação'
+// Oportunidades: 'Aprovado' | 'Aguardando aprovação' | null
+function normStatus(v) {
+  if (!v) return 'Aguardando';
+  const s = String(v).trim().toLowerCase();
+  if (s === 'aprovado')  return 'Aprovado';
+  if (s === 'reprovado') return 'Reprovado';
+  if (s.includes('aguard')) return 'Aguardando';
+  return 'Aguardando';
+}
+
+// ── Filters ─────────────────────────────────────────────────────────────
+function fillFilters(pfx, data) {
+  const anos = [...new Set(data.map(d => d.dataEnvio.getFullYear()))].sort();
+  g(pfx+'-ano').innerHTML = '<option value="">Todos</option>' + anos.map(a=>`<option>${a}</option>`).join('');
+  const resps = [...new Set(data.map(d=>d.responsavel).filter(Boolean))].sort();
+  g(pfx+'-resp').innerHTML = '<option value="">Todos</option>' + resps.map(r=>`<option>${r}</option>`).join('');
+}
+
+function getFiltered(data, pfx) {
+  const mes  = g(pfx+'-mes').value;
+  const ano  = g(pfx+'-ano').value;
+  const resp = g(pfx+'-resp').value;
+  return data.filter(d => {
+    if (mes  && (d.dataEnvio.getMonth()+1) !== +mes)  return false;
+    if (ano  &&  d.dataEnvio.getFullYear() !== +ano)  return false;
+    if (resp && d.responsavel !== resp)                return false;
+    return true;
+  });
+}
+
+function clearF(pfx) {
+  ['mes','ano','resp'].forEach(f => { const el=g(pfx+'-'+f); if(el) el.selectedIndex=0; });
+  pfx==='p' ? renderP() : renderO();
+}
+
+// ── Render ───────────────────────────────────────────────────────────────
+function render(data, pfx, barColor) {
+  const d      = getFiltered(data, pfx);
+  const aprov  = d.filter(r => r.status === 'Aprovado');
+  const reprov = d.filter(r => r.status === 'Reprovado');
+  const aguard = d.filter(r => r.status === 'Aguardando');
+
+  const vAp  = aprov.reduce( (s,r) => s + r.valorAprovado,  0);
+  const vRp  = reprov.reduce((s,r) => s + r.valorReprovado, 0);
+  const taxa = d.length ? Math.round(aprov.length / d.length * 100) : 0;
+  const apComDias = aprov.filter(r => r.diasEspera > 0);
+  const dMed = apComDias.length ? Math.round(apComDias.reduce((s,r)=>s+r.diasEspera,0)/apComDias.length) : 0;
+
+  set(pfx+'-cnt', d.length+' registros');
+  set(pfx+'-k1', d.length);
+  set(pfx+'-k2', aprov.length);
+  set(pfx+'-k3', reprov.length);
+  set(pfx+'-k8', aguard.length);
+  set(pfx+'-k4', taxa+'%');
+  set(pfx+'-k5', 'R$'+fmt(vAp));
+  set(pfx+'-k6', 'R$'+fmt(vRp));
+  set(pfx+'-k7', dMed+'d');
+
+  // Month keys — sorted unique YYYY-MM from filtered data
+  const mks = [...new Set(d.map(r => mKey(r.dataEnvio)))].sort();
+  const lbs = mks.map(mLabel);
+
+  const byM    = mk => d.filter(r => mKey(r.dataEnvio) === mk);
+  const apByM  = mks.map(mk => byM(mk).filter(r=>r.status==='Aprovado').length);
+  const rpByM  = mks.map(mk => byM(mk).filter(r=>r.status==='Reprovado').length);
+  const agByM  = mks.map(mk => byM(mk).filter(r=>r.status==='Aguardando').length);
+  const vApByM = mks.map(mk => byM(mk).filter(r=>r.status==='Aprovado').reduce((s,r)=>s+r.valorAprovado,0));
+  const vRpByM = mks.map(mk => byM(mk).filter(r=>r.status==='Reprovado').reduce((s,r)=>s+r.valorReprovado,0));
+  const tpByM  = mks.map(mk => {
+    const ap = byM(mk).filter(r=>r.status==='Aprovado'&&r.diasEspera>0);
+    return ap.length ? Math.round(ap.reduce((s,r)=>s+r.diasEspera,0)/ap.length) : 0;
+  });
+
+  cBar(pfx+'-c1', lbs, [
+    {label:'Aprovadas',  data:apByM, bg:'#3ecf8e'},
+    {label:'Reprovadas', data:rpByM, bg:'#f16363'},
+    {label:'Aguardando', data:agByM, bg:'#f5a623'},
+  ]);
+  cDoughnut(pfx+'-c2',
+    ['Aprovadas','Reprovadas','Aguardando'],
+    [aprov.length, reprov.length, aguard.length],
+    ['#3ecf8e','#f16363','#f5a623']
+  );
+  cBarMono(pfx+'-c3', lbs, vApByM, barColor);
+  cBarMono(pfx+'-c4', lbs, vRpByM, '#f16363');
+  cLine(pfx+'-c5', lbs, tpByM, '#c9a84c');
+
+  // Ranking
+  const rm = {};
+  aprov.forEach(r => {
+    if (!rm[r.cliente]) rm[r.cliente] = {qtd:0,tot:0};
+    rm[r.cliente].qtd++; rm[r.cliente].tot += r.valorAprovado;
+  });
+  g(pfx+'-rank').innerHTML = Object.entries(rm)
+    .sort((a,b)=>b[1].tot-a[1].tot).slice(0,10)
+    .map(([c,v],i) => {
+      const cl = i===0?'g1':i===1?'g2':i===2?'g3':'';
+      return `<tr>
+        <td><span class="rank-num ${cl}">${i+1}</span></td>
+        <td style="font-weight:500;color:var(--white)">${c}</td>
+        <td class="mono">${v.qtd}</td>
+        <td class="mono" style="color:var(--green)">${brl(v.tot)}</td>
+        <td class="mono dim">${brl(v.tot/v.qtd)}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--ghost)">Nenhuma aprovação no período</td></tr>';
+
+  // Detail table
+  g(pfx+'-tbl').innerHTML = d.slice(0,200).map((r,i) => `<tr>
+    <td class="dim mono">${i+1}</td>
+    <td style="font-weight:500">${r.ns||'—'}</td>
+    <td style="color:var(--white)">${r.cliente||'—'}</td>
+    <td class="dim">${r.equipamento||'—'}</td>
+    <td><span class="pill ${pillCls(r.status)}"><span class="pill-dot"></span>${r.status}</span></td>
+    <td class="mono" style="color:var(--green)">${r.valorAprovado  ? brl(r.valorAprovado)  : '<span class="dim">—</span>'}</td>
+    <td class="mono" style="color:var(--red)">${r.valorReprovado ? brl(r.valorReprovado) : '<span class="dim">—</span>'}</td>
+    <td class="mono dim">${r.diasEspera||0}d</td>
+    <td class="dim">${r.responsavel||'—'}</td>
+    <td class="mono dim">${fmtD(r.dataEnvio)}</td>
+  </tr>`).join('');
+}
+
+function renderP() { render(PD, 'p', '#5b8ef0'); }
+function renderO() { render(OD, 'o', '#3ecf8e'); }
+
+// ── Charts ────────────────────────────────────────────────────────────────
+const gc = '#1e2535';
+const kill = id => { const c=Chart.getChart(id); if(c) c.destroy(); };
+
+function cBar(id, labels, datasets) {
+  kill(id);
+  new Chart(g(id), {
+    type:'bar',
+    data:{labels, datasets:datasets.map(ds=>({label:ds.label,data:ds.data,backgroundColor:ds.bg+'cc',borderRadius:5,borderSkipped:false}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:8,padding:14}}},
+      scales:{x:{grid:{color:gc},ticks:{maxRotation:45}},y:{grid:{color:gc},ticks:{precision:0}}}}
+  });
+}
+function cBarMono(id, labels, data, color) {
+  kill(id);
+  new Chart(g(id), {
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:color+'aa',borderRadius:5,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:gc},ticks:{maxRotation:45}},y:{grid:{color:gc},ticks:{callback:v=>'R$'+fmt(v)}}}}
+  });
+}
+function cDoughnut(id, labels, data, colors) {
+  kill(id);
+  new Chart(g(id), {
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:14}}}}
+  });
+}
+function cLine(id, labels, data, color) {
+  kill(id);
+  new Chart(g(id), {
+    type:'line',
+    data:{labels,datasets:[{data,borderColor:color,backgroundColor:color+'18',fill:true,tension:.45,pointRadius:3,pointBackgroundColor:color,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:gc},ticks:{maxRotation:45}},y:{grid:{color:gc},ticks:{callback:v=>v+'d',precision:0}}}}
+  });
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────
+const g   = id => document.getElementById(id);
+const set = (id,v) => { const el=g(id); if(el) el.textContent=v; };
+
+function strVal(v) { return v == null ? '' : String(v).trim(); }
+function numVal(v) {
+  if (v == null || v === '' || v === 'N/A' || v === 'n/a') return 0;
+  const n = parseFloat(String(v).replace(',','.'));
+  return isNaN(n) ? 0 : n;
+}
+function mKey(d)   { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function mLabel(k) { const [y,m]=k.split('-'); return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][+m-1]+'/'+y.slice(2); }
+function fmt(n) {
+  n=+n||0;
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(0)+'K';
+  return Math.round(n).toLocaleString('pt-BR');
+}
+function brl(n) { return 'R$ '+(+n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtD(d) {
+  if(!d) return '—';
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+function pillCls(s) { return s==='Aprovado'?'pg':s==='Reprovado'?'pr':'pag'; }
+</script>
+</body>
+</html>
