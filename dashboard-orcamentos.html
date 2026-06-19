@@ -342,10 +342,20 @@ function importExcel(e) {
 // ── Parse sheet rows ────────────────────────────────────────────────────
 // Structure: row[0]=instruction, row[1]=headers, row[2..]=data
 function rowVal(o, r, idx, ...keys) {
-  for (const key of keys) {
-    if (o[key] != null && o[key] !== '') return o[key];
+  const wanted = keys.map(normalizeKey);
+  for (const [key, value] of Object.entries(o)) {
+    if (value != null && value !== '' && wanted.includes(normalizeKey(key))) return value;
   }
   return r[idx] ?? null;
+}
+
+function normalizeKey(v) {
+  return String(v ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .trim();
 }
 
 function parseRows(rows, type) {
