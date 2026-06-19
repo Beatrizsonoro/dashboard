@@ -375,8 +375,12 @@ function parseRows(rows, type) {
     const valorInicial = numVal(rowVal(o, r, 6, 'valor_inicial', 'Valor_inicial', 'valor inicial'));
     const diasEspera = numVal(rowVal(o, r, 7, 'dias_espera', 'Dias_espera', 'dias espera'));
     const statusRaw = rowVal(o, r, 14, 'status');
-    const valorAprovado = numVal(rowVal(o, r, 16, 'valor_aprovado', 'Valor_aprovado', 'valor aprovado'));
-    const valorReprovado = numVal(rowVal(o, r, 17, 'valor_reprovado', 'Valor_reprovado', 'valor reprovado'));
+    const valorAprovado = numVal(rowVal(o, r, 16,
+      'valor_aprovado', 'Valor_aprovado', 'valor aprovado', 'valor aprovado.', 'valor aprov.', 'valor ap'
+    ));
+    const valorReprovado = numVal(rowVal(o, r, 17,
+      'valor_reprovado', 'Valor_reprovado', 'valor reprovado', 'valor reprovado.', 'valor reprov.', 'valor rep'
+    ));
     const status = deriveStatus(statusRaw, valorAprovado, valorReprovado);
     const dataRetorno = parseDate(
       rowVal(o, r, 15, 'data_retorno', 'Data_Retorno', 'Data Retorno', 'data retorno', 'data_fechamento', 'Data_Fechamento', 'Data Fechamento')
@@ -628,7 +632,14 @@ const set = (id,v) => { const el=g(id); if(el) el.textContent=v; };
 function strVal(v) { return v == null ? '' : String(v).trim(); }
 function numVal(v) {
   if (v == null || v === '' || v === 'N/A' || v === 'n/a') return 0;
-  const n = parseFloat(String(v).replace(',','.'));
+  if (typeof v === 'number') return isNaN(v) ? 0 : v;
+  const s = String(v).trim();
+  if (!s) return 0;
+  const cleaned = s
+    .replace(/[^0-9,.-]/g, '')
+    .replace(/\.(?=\d{3}(?:\D|$))/g, '')
+    .replace(',', '.');
+  const n = parseFloat(cleaned);
   return isNaN(n) ? 0 : n;
 }
 function mKey(d)   { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
