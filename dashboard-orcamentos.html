@@ -184,10 +184,11 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Total Propostas</div><div class="kpi-ico">📋</div></div><div class="kpi-val" id="p-k1">0</div><div class="kpi-sub">no período</div></div></div>
       <div class="kpi green"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aprovadas</div><div class="kpi-ico">✅</div></div><div class="kpi-val" id="p-k2">0</div><div class="kpi-sub">no período</div></div></div>
       <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Reprovadas</div><div class="kpi-ico">❌</div></div><div class="kpi-val" id="p-k3">0</div><div class="kpi-sub">no período</div></div></div>
-      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aguardando</div><div class="kpi-ico">⏳</div></div><div class="kpi-val" id="p-k8">0</div><div class="kpi-sub">sem retorno</div></div></div>
+      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Pendentes</div><div class="kpi-ico">⏳</div></div><div class="kpi-val" id="p-k8">0</div><div class="kpi-sub">sem retorno</div></div></div>
       <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Taxa Aprovação</div><div class="kpi-ico">📊</div></div><div class="kpi-val" id="p-k4">0%</div><div class="kpi-sub">aprov / total</div></div></div>
       <div class="kpi gold"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Aprovado</div><div class="kpi-ico">💰</div></div><div class="kpi-val" id="p-k5">R$0</div><div class="kpi-sub">total período</div></div></div>
       <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Reprovado</div><div class="kpi-ico">🚫</div></div><div class="kpi-val" id="p-k6">R$0</div><div class="kpi-sub">total período</div></div></div>
+      <div class="kpi grey"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Pendente</div><div class="kpi-ico">📦</div></div><div class="kpi-val" id="p-k9">R$0</div><div class="kpi-sub">soma de G</div></div></div>
       <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Dias Médio Aprov.</div><div class="kpi-ico">⏱️</div></div><div class="kpi-val" id="p-k7">0d</div><div class="kpi-sub">até aprovação</div></div></div>
     </div>
     <div class="cg cg-33">
@@ -212,7 +213,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="tc">
       <div class="th"><span class="tt">📄 Detalhamento de Propostas</span></div>
-      <div class="tw"><table><thead><tr><th>#</th><th>NS/Proposta</th><th>Cliente</th><th>Equipamento</th><th>Status</th><th>Valor Aprov.</th><th>Valor Reprov.</th><th>Dias</th><th>Responsável</th><th>Data Envio</th></tr></thead><tbody id="p-tbl"></tbody></table></div>
+      <div class="tw"><table><thead><tr><th>#</th><th>Número de Série</th><th>Cliente</th><th>Equipamento</th><th>Status</th><th>Valor Aprov.</th><th>Valor Reprov.</th><th>Dias</th><th>Responsável</th><th>Data Envio</th></tr></thead><tbody id="p-tbl"></tbody></table></div>
     </div>
   </div>
 </div></div>
@@ -246,10 +247,11 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Total Oportunidades</div><div class="kpi-ico">🎯</div></div><div class="kpi-val" id="o-k1">0</div><div class="kpi-sub">no período</div></div></div>
       <div class="kpi green"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aprovadas</div><div class="kpi-ico">✅</div></div><div class="kpi-val" id="o-k2">0</div><div class="kpi-sub">no período</div></div></div>
       <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Reprovadas</div><div class="kpi-ico">❌</div></div><div class="kpi-val" id="o-k3">0</div><div class="kpi-sub">no período</div></div></div>
-      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Aguardando</div><div class="kpi-ico">⏳</div></div><div class="kpi-val" id="o-k8">0</div><div class="kpi-sub">sem retorno</div></div></div>
+      <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Pendentes</div><div class="kpi-ico">⏳</div></div><div class="kpi-val" id="o-k8">0</div><div class="kpi-sub">sem retorno</div></div></div>
       <div class="kpi amber"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Taxa Conversão</div><div class="kpi-ico">📊</div></div><div class="kpi-val" id="o-k4">0%</div><div class="kpi-sub">aprov / total</div></div></div>
       <div class="kpi gold"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Aprovado</div><div class="kpi-ico">💰</div></div><div class="kpi-val" id="o-k5">R$0</div><div class="kpi-sub">total período</div></div></div>
       <div class="kpi red"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Reprovado</div><div class="kpi-ico">🚫</div></div><div class="kpi-val" id="o-k6">R$0</div><div class="kpi-sub">total período</div></div></div>
+      <div class="kpi grey"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Valor Pendente</div><div class="kpi-ico">📦</div></div><div class="kpi-val" id="o-k9">R$0</div><div class="kpi-sub">soma de G</div></div></div>
       <div class="kpi blue"><div class="kpi-inner"><div class="kpi-top"><div class="kpi-lbl">Ciclo Médio Aprov.</div><div class="kpi-ico">⏱️</div></div><div class="kpi-val" id="o-k7">0d</div><div class="kpi-sub">até aprovação</div></div></div>
     </div>
     <div class="cg cg-33">
@@ -274,7 +276,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="tc">
       <div class="th"><span class="tt">📄 Detalhamento de Oportunidades</span></div>
-      <div class="tw"><table><thead><tr><th>#</th><th>NS/Proposta</th><th>Cliente</th><th>Equipamento</th><th>Status</th><th>Valor Aprov.</th><th>Valor Reprov.</th><th>Dias</th><th>Responsável</th><th>Data Abertura</th></tr></thead><tbody id="o-tbl"></tbody></table></div>
+      <div class="tw"><table><thead><tr><th>#</th><th>Número de Série</th><th>Cliente</th><th>Equipamento</th><th>Status</th><th>Valor Aprov.</th><th>Valor Reprov.</th><th>Dias</th><th>Responsável</th><th>Data Abertura</th><th>Data Fechamento</th></tr></thead><tbody id="o-tbl"></tbody></table></div>
     </div>
   </div>
 </div></div>
@@ -339,6 +341,13 @@ function importExcel(e) {
 
 // ── Parse sheet rows ────────────────────────────────────────────────────
 // Structure: row[0]=instruction, row[1]=headers, row[2..]=data
+function rowVal(o, r, idx, ...keys) {
+  for (const key of keys) {
+    if (o[key] != null && o[key] !== '') return o[key];
+  }
+  return r[idx] ?? null;
+}
+
 function parseRows(rows, type) {
   if (rows.length < 3) return [];
   const hdr = rows[1].map(h => h != null ? String(h).trim() : '');
@@ -352,27 +361,37 @@ function parseRows(rows, type) {
     const o = {};
     hdr.forEach((h, ci) => { if (h) o[h] = r[ci] ?? null; });
 
-    // Skip rows with no date at all
-    const dt = parseDate(o['Data_Envio']);
-    if (!dt) continue;
+    const numeroSerie = strVal(rowVal(o, r, 4, 'numero_serie', 'Numero_Serie', 'Número de Série'));
+    const valorInicial = numVal(rowVal(o, r, 6, 'valor_inicial', 'Valor_inicial', 'valor inicial'));
+    const diasEspera = numVal(rowVal(o, r, 7, 'dias_espera', 'Dias_espera', 'dias espera'));
+    const statusRaw = rowVal(o, r, 14, 'status');
+    const valorAprovado = numVal(rowVal(o, r, 16, 'valor_aprovado', 'Valor_aprovado', 'valor aprovado'));
+    const valorReprovado = numVal(rowVal(o, r, 17, 'valor_reprovado', 'Valor_reprovado', 'valor reprovado'));
+    const status = deriveStatus(statusRaw, valorAprovado, valorReprovado);
+    const dataRetorno = parseDate(
+      rowVal(o, r, 15, 'data_retorno', 'Data_Retorno', 'Data Retorno', 'data retorno', 'data_fechamento', 'Data_Fechamento', 'Data Fechamento')
+    );
+    const dataEnvio = parseDate(o['Data_Envio'] ?? o['Data Envio'] ?? o['data_envio'] ?? o['data envio']);
+    const dataBase = (status === 'Aprovado' || status === 'Reprovado')
+      ? (dataRetorno || dataEnvio)
+      : dataEnvio;
 
-    const status = normStatus(o['status']);
-
-    // Values
-    // Proposta:      valor_aprovado col[14], valor_reprovado col[15]
-    // Oportunidades: valor_aprovado col[15] (same as Valor_inicial col[5])
-    const vAp = numVal(o['valor_aprovado']) || (type === 'oportunidades' ? numVal(o['Valor_inicial']) : 0);
-    const vRp = numVal(o['valor_reprovado']);
+    // Skip only rows that cannot participate in the date filter at all
+    if (!dataBase) continue;
 
     out.push({
-      ns:          strVal(o['NS/Proposta']),
+      ns:          numeroSerie,
       cliente:     strVal(o['Cliente']),
       equipamento: strVal(o['Equipamento']),
       responsavel: strVal(o['responsavel']),
-      dataEnvio:   dt,
-      diasEspera:  numVal(o['Dias_espera']),
-      valorAprovado:  vAp,
-      valorReprovado: vRp,
+      valorInicial,
+      dataEnvio,
+      dataRetorno,
+      dataBase,
+      diasEspera,
+      valorAprovado,
+      valorReprovado,
+      valorPendente: status === 'Pendente' ? valorInicial : 0,
       status,
     });
   }
@@ -421,20 +440,19 @@ function parseDate(v) {
 }
 
 // ── Status normalisation ────────────────────────────────────────────────
-// Proposta:      'Aprovado' | 'Reprovado' | 'Aguardando Aprovação'
-// Oportunidades: 'Aprovado' | 'Aguardando aprovação' | null
-function normStatus(v) {
-  if (!v) return 'Aguardando';
-  const s = String(v).trim().toLowerCase();
-  if (s === 'aprovado')  return 'Aprovado';
+function deriveStatus(rawStatus, valorAprovado, valorReprovado) {
+  if (valorAprovado > 0) return 'Aprovado';
+  if (valorReprovado > 0) return 'Reprovado';
+  const s = String(rawStatus ?? '').trim().toLowerCase();
+  if (!s || s === 'pendente' || s.includes('aguard')) return 'Pendente';
+  if (s === 'aprovado') return 'Aprovado';
   if (s === 'reprovado') return 'Reprovado';
-  if (s.includes('aguard')) return 'Aguardando';
-  return 'Aguardando';
+  return 'Pendente';
 }
 
 // ── Filters ─────────────────────────────────────────────────────────────
 function fillFilters(pfx, data) {
-  const anos = [...new Set(data.map(d => d.dataEnvio.getFullYear()))].sort();
+  const anos = [...new Set(data.map(d => d.dataBase.getFullYear()))].sort();
   g(pfx+'-ano').innerHTML = '<option value="">Todos</option>' + anos.map(a=>`<option>${a}</option>`).join('');
   const resps = [...new Set(data.map(d=>d.responsavel).filter(Boolean))].sort();
   g(pfx+'-resp').innerHTML = '<option value="">Todos</option>' + resps.map(r=>`<option>${r}</option>`).join('');
@@ -445,8 +463,8 @@ function getFiltered(data, pfx) {
   const ano  = g(pfx+'-ano').value;
   const resp = g(pfx+'-resp').value;
   return data.filter(d => {
-    if (mes  && (d.dataEnvio.getMonth()+1) !== +mes)  return false;
-    if (ano  &&  d.dataEnvio.getFullYear() !== +ano)  return false;
+    if (mes  && (d.dataBase.getMonth()+1) !== +mes)  return false;
+    if (ano  &&  d.dataBase.getFullYear() !== +ano)  return false;
     if (resp && d.responsavel !== resp)                return false;
     return true;
   });
@@ -462,10 +480,11 @@ function render(data, pfx, barColor) {
   const d      = getFiltered(data, pfx);
   const aprov  = d.filter(r => r.status === 'Aprovado');
   const reprov = d.filter(r => r.status === 'Reprovado');
-  const aguard = d.filter(r => r.status === 'Aguardando');
+  const pend   = d.filter(r => r.status === 'Pendente');
 
   const vAp  = aprov.reduce( (s,r) => s + r.valorAprovado,  0);
   const vRp  = reprov.reduce((s,r) => s + r.valorReprovado, 0);
+  const vPe  = pend.reduce((s,r) => s + r.valorPendente, 0);
   const taxa = d.length ? Math.round(aprov.length / d.length * 100) : 0;
   const apComDias = aprov.filter(r => r.diasEspera > 0);
   const dMed = apComDias.length ? Math.round(apComDias.reduce((s,r)=>s+r.diasEspera,0)/apComDias.length) : 0;
@@ -474,17 +493,18 @@ function render(data, pfx, barColor) {
   set(pfx+'-k1', d.length);
   set(pfx+'-k2', aprov.length);
   set(pfx+'-k3', reprov.length);
-  set(pfx+'-k8', aguard.length);
+  set(pfx+'-k8', pend.length);
   set(pfx+'-k4', taxa+'%');
   set(pfx+'-k5', 'R$'+fmt(vAp));
   set(pfx+'-k6', 'R$'+fmt(vRp));
+  set(pfx+'-k9', 'R$'+fmt(vPe));
   set(pfx+'-k7', dMed+'d');
 
   // Month keys — sorted unique YYYY-MM from filtered data
-  const mks = [...new Set(d.map(r => mKey(r.dataEnvio)))].sort();
+  const mks = [...new Set(d.map(r => mKey(r.dataBase)))].sort();
   const lbs = mks.map(mLabel);
 
-  const byM    = mk => d.filter(r => mKey(r.dataEnvio) === mk);
+  const byM    = mk => d.filter(r => mKey(r.dataBase) === mk);
   const apByM  = mks.map(mk => byM(mk).filter(r=>r.status==='Aprovado').length);
   const rpByM  = mks.map(mk => byM(mk).filter(r=>r.status==='Reprovado').length);
   const agByM  = mks.map(mk => byM(mk).filter(r=>r.status==='Aguardando').length);
@@ -501,8 +521,8 @@ function render(data, pfx, barColor) {
     {label:'Aguardando', data:agByM, bg:'#f5a623'},
   ]);
   cDoughnut(pfx+'-c2',
-    ['Aprovadas','Reprovadas','Aguardando'],
-    [aprov.length, reprov.length, aguard.length],
+    ['Aprovadas','Reprovadas','Pendentes'],
+    [aprov.length, reprov.length, pend.length],
     ['#3ecf8e','#f16363','#f5a623']
   );
   cBarMono(pfx+'-c3', lbs, vApByM, barColor);
@@ -540,6 +560,7 @@ function render(data, pfx, barColor) {
     <td class="mono dim">${r.diasEspera||0}d</td>
     <td class="dim">${r.responsavel||'—'}</td>
     <td class="mono dim">${fmtD(r.dataEnvio)}</td>
+    ${pfx === 'o' ? `<td class="mono dim">${fmtD(r.dataRetorno)}</td>` : ''}
   </tr>`).join('');
 }
 
