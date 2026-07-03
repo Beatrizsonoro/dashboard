@@ -346,7 +346,7 @@ function rowVal(o, r, idx, ...keys) {
   for (const [key, value] of Object.entries(o)) {
     if (value != null && value !== '' && wanted.includes(normalizeKey(key))) return value;
   }
-  return r[idx] ?? null;
+  return null;
 }
 
 function normalizeKey(v) {
@@ -354,16 +354,31 @@ function normalizeKey(v) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/\br\$\b/g, '')
+    .replace(/\$(?![0-9])/g, '')
+    .replace(/\b(usd|eur|brl)\b/g, '')
+    .replace(/[%ºª]/g, '')
     .replace(/[^a-z0-9]+/g, '')
     .trim();
 }
 
 function parseRows(rows, type) {
-  if (rows.length < 3) return [];
-  const hdr = rows[1].map(h => h != null ? String(h).trim() : '');
+  if (rows.length < 2) return [];
+
+  const knownCols = ['numero_serie','ns/proposta','cliente','equipamento','status','valor_aprovado','valor_reprovado','valor','data_envio','data_retorno','dias_espera','responsavel','data_fechamento','valor_inicial'];
+  const rowHasHeader = row => Array.isArray(row) && row.some(cell => knownCols.includes(normalizeKey(cell)));
+
+  let hdr = rows[1].map(h => h != null ? String(h).trim() : '');
+  let startRow = 2;
+  if (!rowHasHeader(rows[1]) && rowHasHeader(rows[0])) {
+    hdr = rows[0].map(h => h != null ? String(h).trim() : '');
+    startRow = 1;
+  }
+  if (!rowHasHeader(hdr)) return [];
+
   const out = [];
 
-  for (let i = 2; i < rows.length; i++) {
+  for (let i = startRow; i < rows.length; i++) {
     const r = rows[i];
     if (!r || r.every(c => c === null || c === '')) continue;
 
@@ -375,17 +390,36 @@ function parseRows(rows, type) {
     const valorInicial = numVal(rowVal(o, r, 6, 'valor_inicial', 'Valor_inicial', 'valor inicial'));
     const diasEspera = numVal(rowVal(o, r, 7, 'dias_espera', 'Dias_espera', 'dias espera'));
     const statusRaw = rowVal(o, r, 14, 'status');
-    const valorAprovado = numVal(rowVal(o, r, 16,
-      'valor_aprovado', 'Valor_aprovado', 'valor aprovado', 'valor aprovado.', 'valor aprov.', 'valor ap'
+    const valorAprovadoRaw = numVal(rowVal(o, r, 16,
+      'valor_aprovado', 'Valor_aprovado', 'valor aprovado', 'valor aprovado.', 'valor aprov.', 'valor ap',
+      'valoraprovado'
     ));
-    const valorReprovado = numVal(rowVal(o, r, 17,
-      'valor_reprovado', 'Valor_reprovado', 'valor reprovado', 'valor reprovado.', 'valor reprov.', 'valor rep'
+    const valorReprovadoRaw = numVal(rowVal(o, r, 17,
+      'valor_reprovado', 'Valor_reprovado', 'valor reprovado', 'valor reprovado.', 'valor reprov.', 'valor rep',
+      'valorreprovado'
     ));
-    const status = deriveStatus(statusRaw, valorAprovado, valorReprovado);
+    const valorGenerico = numVal(rowVal(o, r, 16,
+      'valor', 'valor_total', 'valor total', 'valorestimado', 'valor estimado', 'valorproposta', 'valor proposta',
+      'valorparcial', 'valor parcial'
+    ));
+    const status = deriveStatus(statusRaw, valorAprovadoRaw, valorReprovadoRaw);
+    let valorAprovado = valorAprovadoRaw;
+    let valorReprovado = valorReprovadoRaw;
+    if (!valorAprovado && !valorReprovado && valorGenerico > 0) {
+      if (status === 'Aprovado') valorAprovado = valorGenerico;
+      else if (status === 'Reprovado') valorReprovado = valorGenerico;
+    }
+    if (valorAprovado > 0 && valorReprovado > 0) {
+      if (status === 'Aprovado') valorReprovado = 0;
+      else if (status === 'Reprovado') valorAprovado = 0;
+    }
     const dataRetorno = parseDate(
       rowVal(o, r, 15, 'data_retorno', 'Data_Retorno', 'Data Retorno', 'data retorno', 'data_fechamento', 'Data_Fechamento', 'Data Fechamento')
     );
-    const dataEnvio = parseDate(o['Data_Envio'] ?? o['Data Envio'] ?? o['data_envio'] ?? o['data envio']);
+    const dataEnvio = parseDate(rowVal(o, r, 0, 'data_envio', 'Data_Envio', 'Data Envio', 'data envio'));
+    const dataFechamento = parseDate(rowVal(o, r, 15,
+      'data_fechamento', 'Data_Fechamento', 'Data Fechamento', 'data fechamento'
+    ));
     const dataBase = (status === 'Aprovado' || status === 'Reprovado')
       ? (dataRetorno || dataEnvio)
       : dataEnvio;
@@ -395,17 +429,18 @@ function parseRows(rows, type) {
 
     out.push({
       ns:          numeroSerie,
-      cliente:     strVal(o['Cliente']),
-      equipamento: strVal(o['Equipamento']),
-      responsavel: strVal(o['responsavel']),
+      cliente:     strVal(rowVal(o, r, 1, 'cliente')),
+      equipamento: strVal(rowVal(o, r, 2, 'equipamento')),
+      responsavel: strVal(rowVal(o, r, 3, 'responsavel', 'responsável', 'responsavel')),
       valorInicial,
       dataEnvio,
       dataRetorno,
+      dataFechamento,
       dataBase,
       diasEspera,
       valorAprovado,
       valorReprovado,
-      valorPendente: status === 'Pendente' ? valorInicial : 0,
+      valorPendente: status === 'Pendente' ? (valorInicial || valorGenerico) : 0,
       status,
     });
   }
@@ -455,12 +490,16 @@ function parseDate(v) {
 
 // ── Status normalisation ────────────────────────────────────────────────
 function deriveStatus(rawStatus, valorAprovado, valorReprovado) {
-  if (valorAprovado > 0) return 'Aprovado';
-  if (valorReprovado > 0) return 'Reprovado';
-  const s = String(rawStatus ?? '').trim().toLowerCase();
-  if (!s || s === 'pendente' || s.includes('aguard')) return 'Pendente';
+  const s = String(rawStatus ?? '')
+    .normalize('NFD')
+    .replace(/[ -\u036f]/g, '')
+    .trim()
+    .toLowerCase();
   if (s === 'aprovado') return 'Aprovado';
   if (s === 'reprovado') return 'Reprovado';
+  if (!s || s === 'pendente' || s.includes('aguard')) return 'Pendente';
+  if (valorAprovado > 0) return 'Aprovado';
+  if (valorReprovado > 0) return 'Reprovado';
   return 'Pendente';
 }
 
@@ -574,7 +613,7 @@ function render(data, pfx, barColor) {
     <td class="mono dim">${r.diasEspera||0}d</td>
     <td class="dim">${r.responsavel||'—'}</td>
     <td class="mono dim">${fmtD(r.dataEnvio)}</td>
-    ${pfx === 'o' ? `<td class="mono dim">${fmtD(r.dataRetorno)}</td>` : ''}
+    ${pfx === 'o' ? `<td class="mono dim">${fmtD(r.dataFechamento || r.dataRetorno)}</td>` : ''}
   </tr>`).join('');
 }
 
