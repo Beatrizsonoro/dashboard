@@ -9,16 +9,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --ink:#0f1117;--ink2:#1c2030;--ink3:#252b3b;
-  --line:#2e3447;--line2:#3b4260;
-  --muted:#7b839e;--ghost:#4a5168;
-  --white:#f4f5f8;--white2:#e8eaf0;
-  --gold:#7ecbff;--gold2:#b8e7ff;--goldbg:rgba(126,203,255,.12);
-  --green:#3ecf8e;--greenbg:rgba(62,207,142,.10);
-  --red:#f16363;--redbg:rgba(241,99,99,.10);
-  --blue:#5b8ef0;--bluebg:rgba(91,142,240,.10);
-  --amber:#f5a623;--amberbg:rgba(245,166,35,.10);
-  --r:12px;--r2:8px;
+  --ink:#061026;--ink2:#081a2f;--ink3:#0d2440;
+  --line:#2b3d5f;--line2:#435f93;
+  --muted:#95a2ba;--ghost:#8a9bcb;
+  --white:#eef5ff;--white2:#d7e5ff;
+  --gold:#89a7ff;--gold2:#adc3ff;--goldbg:rgba(136,166,255,.14);
+  --green:#06da22;--greenbg:rgba(101,216,255,.14);
+  --red:#e72020;--redbg:rgba(255,109,201,.14);
+  --blue:#ff9c09;--blue2:#4f6dff;--bluebg:rgba(123,141,255,.12);
+  --purple:#aeeef7;--purplebg:rgba(145,124,255,.12);
+  --amber:#c49dff;--amberbg:rgba(196,157,255,.12);
+  --r:18px;--r2:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--white);min-height:100vh}
@@ -29,27 +30,27 @@ body>*{position:relative;z-index:1}
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
 
 /* HEADER */
-.hdr{background:var(--ink2);border-bottom:1px solid var(--line);padding:0 32px;display:flex;align-items:center;gap:16px;height:64px}
+.hdr{background:var(--ink3);border-bottom:1px solid var(--line);padding:0 32px;display:flex;align-items:center;gap:16px;height:64px}
 .logo{display:flex;align-items:center;gap:10px}
-.logo-mark{width:34px;height:34px;background:var(--gold);border-radius:9px;display:grid;place-items:center;font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);box-shadow:none;flex-shrink:0}
+.logo-mark{width:34px;height:34px;background:var(--purple);border-radius:12px;display:grid;place-items:center;font-family:'DM Serif Display',serif;font-size:15px;color:var(--white);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 14px 40px rgba(44,77,255,.14);flex-shrink:0}
 .logo-text{font-size:15px;font-weight:600;color:var(--white);letter-spacing:-.01em}
-.logo-sub{font-size:11px;color:var(--muted)}
+.logo-sub{font-size:11px;color:var(--ghost)}
 .hdr-mid{flex:1;display:flex;gap:8px}
-.hdr-chip{font-size:11px;font-weight:500;padding:4px 12px;border-radius:20px;background:var(--ink3);border:1px solid var(--line);color:var(--muted)}
-.hdr-chip b{color:var(--gold);font-weight:600}
-.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--line);background:var(--ink3);color:var(--muted);transition:all .18s;white-space:nowrap}
-.btn:hover{border-color:var(--line2);color:var(--white)}
-.btn-gold{background:var(--gold);border-color:transparent;color:var(--ink);font-weight:600;box-shadow:none}
-.btn-gold:hover{transform:none;color:var(--ink)}
+.hdr-chip{font-size:11px;font-weight:500;padding:6px 14px;border-radius:24px;background:rgba(151,181,255,.08);border:1px solid rgba(142,166,255,.18);color:var(--white2)}
+.hdr-chip b{color:var(--blue2);font-weight:700}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;background:linear-gradient(135deg, var(--blue2), var(--purple));color:#fff;transition:all .18s;white-space:nowrap;box-shadow:0 18px 40px rgba(44,77,255,.16)}
+.btn:hover{transform:translateY(-1px);opacity:1}
+.btn-gold{background:linear-gradient(135deg, var(--gold), var(--purple));border-color:transparent;color:#071936;font-weight:700;box-shadow:0 10px 24px rgba(149,120,255,.16)}
+.btn-gold:hover{transform:none}
 input[type=file]{display:none}
 
 /* TABS */
-.tabs{background:var(--ink2);border-bottom:1px solid var(--line);padding:0 32px;display:flex}
+.tabs{background:transparent;border-bottom:1px solid var(--line);padding:0 32px;display:flex}
 .tab{padding:0 20px;height:46px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;transition:all .18s}
 .tab:hover{color:var(--white2)}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
-.tab-badge{font-size:10px;font-weight:700;background:var(--ink3);color:var(--muted);padding:1px 7px;border-radius:20px;border:1px solid var(--line);transition:.18s}
-.tab.active .tab-badge{background:var(--goldbg);color:var(--gold);border-color:var(--gold)}
+.tab.active{color:var(--blue2);border-bottom-color:var(--blue2)}
+.tab-badge{font-size:10px;font-weight:700;background:var(--ink2);color:var(--ghost);padding:1px 7px;border-radius:20px;border:1px solid var(--line);transition:.18s}
+.tab.active .tab-badge{background:rgba(124,141,255,.16);color:var(--blue2);border-color:var(--blue2)}
 
 /* LAYOUT */
 .wrap{max-width:1480px;margin:0 auto;padding:28px 32px}
@@ -193,7 +194,7 @@ tbody tr:hover td{background:var(--ink3)}
     <div class="cg cg-33">
       <div class="cc">
         <div class="ch"><span class="ct">Aprovadas e Reprovadas por Mês</span><span class="cbadge">MENSAL</span></div>
-        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>Aprovadas</span><span><span class="ld" style="background:#f16363"></span>Reprovadas</span></div>
+        <div class="leg"><span><span class="ld" style="background:#5ad2ff"></span>Aprovadas</span><span><span class="ld" style="background:#8c7cff"></span>Reprovadas</span></div>
         <div style="position:relative;height:220px"><canvas id="p-c1"></canvas></div>
       </div>
       <div class="cc">
@@ -251,7 +252,7 @@ tbody tr:hover td{background:var(--ink3)}
     <div class="cg cg-33">
       <div class="cc">
         <div class="ch"><span class="ct">Resultado por Ano</span><span class="cbadge">ANUAL</span></div>
-        <div class="leg"><span><span class="ld" style="background:#3ecf8e"></span>Aprovadas</span><span><span class="ld" style="background:#f16363"></span>Reprovadas</span><span><span class="ld" style="background:#f5a623"></span>Aguardando</span></div>
+        <div class="leg"><span><span class="ld" style="background:#5ad2ff"></span>Aprovadas</span><span><span class="ld" style="background:#8c7cff"></span>Reprovadas</span><span><span class="ld" style="background:#c49dff"></span>Aguardando</span></div>
         <div style="position:relative;height:220px"><canvas id="o-c1"></canvas></div>
       </div>
       <div class="cc">
@@ -273,13 +274,13 @@ tbody tr:hover td{background:var(--ink3)}
 
 <script>
 // Chart.js defaults
-Chart.defaults.color = '#4a5168';
-Chart.defaults.borderColor = '#2e3447';
+Chart.defaults.color = '#f0f6ff';
+Chart.defaults.borderColor = '#f0f6ff';
 Chart.defaults.font.family = "'DM Sans', sans-serif";
 Chart.defaults.font.size = 11;
 Object.assign(Chart.defaults.plugins.tooltip, {
-  backgroundColor:'#1c2030', borderColor:'#2e3447', borderWidth:1,
-  titleColor:'#f4f5f8', bodyColor:'#7b839e', padding:10, cornerRadius:8
+  backgroundColor:'#101a2f', borderColor:'#2e3447', borderWidth:1,
+  titleColor:'#f0f6ff', bodyColor:'#f0f6ff', padding:10, cornerRadius:8
 });
 
 // ── State ──────────────────────────────────────────────────────────────
@@ -545,7 +546,7 @@ function render(data, pfx, barColor) {
   const apComDias = aprov.filter(r => r.diasEspera > 0);
   const dMed = apComDias.length ? Math.round(apComDias.reduce((s,r)=>s+r.diasEspera,0)/apComDias.length) : 0;
   const totalAll = d.length;
-  const aguardAll = data.filter(r => r.status === 'Aguardando').length;
+  const aguardAll = aguard.length;
 
   set(pfx+'-cnt', d.length+' registros');
   set(pfx+'-k1', totalAll);
@@ -561,42 +562,27 @@ function render(data, pfx, barColor) {
     const annualD = getFilteredAnnual(source, pfx);
     const ms = monthlySeries(d);
     const annualMs = monthlySeries(annualD);
-    const lastIdx = Math.max(ms.labels.length - 1, 0);
-    const totalMes = rawD.length;
-    const monthAprov = ms.ap[lastIdx] || 0;
-    const monthReprov = ms.rp[lastIdx] || 0;
-    const monthValAprov = ms.vAp[lastIdx] || 0;
-    const monthValReprov = ms.vRp[lastIdx] || 0;
-
-    set('p-k1', totalMes);
-    set('p-k2', ms.apCum.at(-1) || 0);
-    set('p-k3', monthReprov);
-    set('p-k4', ms.rpCum.at(-1) || 0);
-    set('p-k5', 'R$'+fmt(monthValAprov));
-    set('p-k6', 'R$'+fmt(ms.vApCum.at(-1) || 0));
-    set('p-k7', dMed+'d');
-    set('p-k8', 'R$'+fmt(ms.vRpCum.at(-1) || 0));
 
     cBar('p-c1', ms.labels, [
-      {label:'Aprovadas', data:ms.ap, bg:'#3ecf8e'},
-      {label:'Reprovadas', data:ms.rp, bg:'#f16363'},
+      {label:'Aprovadas', data:ms.ap, bg:'#5bd8ff'},
+      {label:'Reprovadas', data:ms.rp, bg:'#ff6dc9'},
     ]);
     cDoughnut('p-c2',
       ['Aprovadas','Reprovadas'],
       [aprov.length, reprov.length],
-      ['#3ecf8e','#f16363']
+      ['#5bd8ff','#ff6dc9']
     );
     cBar('p-c3', ms.labels, [
-      {label:'Valor Aprovado', data:ms.vAp, bg:'#7ecbff'},
-      {label:'Valor Reprovado', data:ms.vRp, bg:'#f16363'},
+      {label:'Valor Aprovado', data:ms.vAp, bg:'#50e1b4'},
+      {label:'Valor Reprovado', data:ms.vRp, bg:'#5c7dff'},
     ]);
     cLineMulti('p-c4', annualMs.labels, [
-      {label:'Aprovadas acumuladas', data:annualMs.apCum, color:'#3ecf8e'},
-      {label:'Reprovadas acumuladas', data:annualMs.rpCum, color:'#f16363'},
+      {label:'Aprovadas acumuladas', data:annualMs.apCum, color:'#5bd8ff'},
+      {label:'Reprovadas acumuladas', data:annualMs.rpCum, color:'#ff6dc9'},
     ]);
     cLineMulti('p-c5', annualMs.labels, [
-      {label:'Valor aprovado acumulado', data:annualMs.vApCum, color:'#7ecbff'},
-      {label:'Valor reprovado acumulado', data:annualMs.vRpCum, color:'#f16363'},
+      {label:'Valor aprovado acumulado', data:annualMs.vApCum, color:'#50e1b4'},
+      {label:'Valor reprovado acumulado', data:annualMs.vRpCum, color:'#5c7dff'},
     ], v => 'R$'+fmt(v));
   } else {
     // Year keys — sorted unique YYYY from filtered data
@@ -614,18 +600,18 @@ function render(data, pfx, barColor) {
     });
 
     cBar(pfx+'-c1', lbs, [
-      {label:'Aprovadas',  data:apByM, bg:'#3ecf8e'},
-      {label:'Reprovadas', data:rpByM, bg:'#f16363'},
-      {label:'Aguardando', data:agByM, bg:'#f5a623'},
+      {label:'Aprovadas',  data:apByM, bg:'#5bd8ff'},
+      {label:'Reprovadas', data:rpByM, bg:'#ff6dc9'},
+      {label:'Aguardando', data:agByM, bg:'#d3b3ff'},
     ]);
     cDoughnut(pfx+'-c2',
       ['Aprovadas','Reprovadas','Aguardando'],
       [aprov.length, reprov.length, aguard.length],
-      ['#3ecf8e','#f16363','#f5a623']
+      ['#5bd8ff','#ff6dc9','#d3b3ff']
     );
     cBarMono(pfx+'-c3', lbs, vApByM, barColor);
-    cBarMono(pfx+'-c4', lbs, vRpByM, '#f16363');
-    cLine(pfx+'-c5', lbs, tpByM, '#7ecbff');
+    cBarMono(pfx+'-c4', lbs, vRpByM, '#ff6dc9');
+    cLine(pfx+'-c5', lbs, tpByM, '#4f6dff');
   }
 
   // Detail table
@@ -643,8 +629,8 @@ function render(data, pfx, barColor) {
   </tr>`).join('');
 }
 
-function renderP() { render(PD, 'p', '#5b8ef0'); }
-function renderO() { render(OD, 'o', '#3ecf8e'); }
+function renderP() { render(PD, 'p', '#2c4dff'); }
+function renderO() { render(OD, 'o', '#5c7dff'); }
 
 // ── Charts ────────────────────────────────────────────────────────────────
 const gc = '#1e2535';
@@ -715,8 +701,8 @@ function cBar(id, labels, datasets) {
     data:{labels, datasets:datasets.map(ds=>({label:ds.label,data:ds.data,backgroundColor:ds.bg+'cc',borderRadius:5,borderSkipped:false}))},
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},
-      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:8,padding:14}}},
-      scales:{x:{grid:{color:gc},ticks:{maxRotation:45}},y:{grid:{color:gc},ticks:{precision:0}}}}
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:8,padding:14,color:'#f0f6ff'}}},
+      scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',maxRotation:45}},y:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',precision:0}}}}
   });
 }
 function cBarMono(id, labels, data, color) {
@@ -727,7 +713,7 @@ function cBarMono(id, labels, data, color) {
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},
       plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:gc},ticks:{maxRotation:45}},y:{grid:{color:gc},ticks:{callback:v=>'R$'+fmt(v)}}}}
+      scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',maxRotation:45}},y:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',callback:v=>'R$'+fmt(v)}}}}
   });
 }
 function cDoughnut(id, labels, data, colors) {
@@ -748,7 +734,7 @@ function cLine(id, labels, data, color) {
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},
       plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:gc},ticks:{maxRotation:45}},y:{grid:{color:gc},ticks:{callback:v=>v+'d',precision:0}}}}
+      scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',maxRotation:45}},y:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',callback:v=>v+'d',precision:0}}}}
   });
 }
 
@@ -772,8 +758,8 @@ function cLineMulti(id, labels, datasets, tickFormatter) {
     },
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},
-      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:8,padding:14}}},
-      scales:{x:{grid:{color:gc},ticks:{maxRotation:45}},y:{grid:{color:gc},ticks:{callback:tickFormatter || (v=>v),precision:0}}}}
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:8,padding:14,color:'#f0f6ff'}}},
+      scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',maxRotation:45}},y:{grid:{display:false},border:{display:false},ticks:{color:'#f0f6ff',callback:tickFormatter || (v=>v),precision:0}}}}
   });
 }
 
