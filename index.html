@@ -9,16 +9,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --ink:#061026;--ink2:#081a2f;--ink3:#0d2440;
-  --line:#2b3d5f;--line2:#435f93;
-  --muted:#95a2ba;--ghost:#8a9bcb;
-  --white:#eef5ff;--white2:#d7e5ff;
-  --gold:#89a7ff;--gold2:#adc3ff;--goldbg:rgba(136,166,255,.14);
-  --green:#06da22;--greenbg:rgba(101,216,255,.14);
-  --red:#e72020;--redbg:rgba(255,109,201,.14);
-  --blue:#ff9c09;--blue2:#4f6dff;--bluebg:rgba(123,141,255,.12);
-  --purple:#aeeef7;--purplebg:rgba(145,124,255,.12);
-  --amber:#c49dff;--amberbg:rgba(196,157,255,.12);
+  --ink:#060618;--ink2:#060618;--ink3:#060618;
+  --line:#26262c;--line2:#34343c;
+  --muted:#8a8a94;--ghost:#5c5c66;
+  --white:#9eb0ff;--white2:#9eb0ff;
+  --gold:#9eb0ff;--gold2:#9eb0ff;--goldbg:rgba(201,201,207,.10);
+  --green:#0ea501;--greenbg:rgba(14,165,1,.10);
+  --red:#ad0000;--redbg:rgba(241,101,101,.10);
+  --blue:#0055ff;--blue2:#5b8def;--bluebg:rgba(61,111,224,.10);
+  --purple:#066896;--purplebg:rgba(157,140,241,.10);
+  --amber:#0055ff;--amberbg:rgba(224,167,94,.10);
   --r:18px;--r2:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -38,10 +38,10 @@ body>*{position:relative;z-index:1}
 .hdr-mid{flex:1;display:flex;gap:8px}
 .hdr-chip{font-size:11px;font-weight:500;padding:6px 14px;border-radius:24px;background:rgba(151,181,255,.08);border:1px solid rgba(142,166,255,.18);color:var(--white2)}
 .hdr-chip b{color:var(--blue2);font-weight:700}
-.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;background:linear-gradient(135deg, var(--blue2), var(--purple));color:#fff;transition:all .18s;white-space:nowrap;box-shadow:0 18px 40px rgba(44,77,255,.16)}
-.btn:hover{transform:translateY(-1px);opacity:1}
-.btn-gold{background:linear-gradient(135deg, var(--gold), var(--purple));border-color:transparent;color:#071936;font-weight:700;box-shadow:0 10px 24px rgba(149,120,255,.16)}
-.btn-gold:hover{transform:none}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.08);background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;transition:all .18s;white-space:nowrap;box-shadow:0 10px 20px rgba(233, 15, 15, 0.08)}
+.btn:hover{transform:translateY(-1px);opacity:1;background:linear-gradient(135deg,rgba(128,167,255,.95),rgba(79,123,255,.95))}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:rgba(255,255,255,.08);color:var(--ink3);font-weight:700;box-shadow:0 10px 20px rgba(0,0,0,.08)}
+.btn-gold:hover{transform:none;background:linear-gradient(135deg,rgba(212,167,106,.95),rgba(240,197,127,.95))}
 input[type=file]{display:none}
 
 /* TABS */
@@ -120,8 +120,8 @@ tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--ink3)}
 .rank-num{width:26px;height:26px;border-radius:7px;display:inline-grid;place-items:center;font-size:11px;font-weight:700;background:var(--ink3);color:var(--ghost);border:1px solid var(--line)}
 .rank-num.g1{background:var(--goldbg);color:var(--gold);border-color:var(--gold)}
-.rank-num.g2{background:rgba(192,192,220,.08);color:#b0b8cc;border-color:rgba(180,180,200,.2)}
-.rank-num.g3{background:rgba(180,120,60,.08);color:#c09060;border-color:rgba(180,120,60,.2)}
+.rank-num.g2{background:rgba(95,122,215,.08);color:#92a2d8;border-color:rgba(95,122,215,.2)}
+.rank-num.g3{background:rgba(244,177,76,.08);color:var(--amber);border-color:rgba(244,177,76,.2)}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
 .pill-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .pg{background:var(--greenbg);color:var(--green);border:1px solid rgba(62,207,142,.2)}.pg .pill-dot{background:var(--green)}
@@ -194,7 +194,7 @@ tbody tr:hover td{background:var(--ink3)}
     <div class="cg cg-33">
       <div class="cc">
         <div class="ch"><span class="ct">Aprovadas e Reprovadas por Mês</span><span class="cbadge">MENSAL</span></div>
-        <div class="leg"><span><span class="ld" style="background:#5ad2ff"></span>Aprovadas</span><span><span class="ld" style="background:#8c7cff"></span>Reprovadas</span></div>
+        <div class="leg"><span><span class="ld" style="background:var(--green)"></span>Aprovadas</span><span><span class="ld" style="background:var(--red)"></span>Reprovadas</span></div>
         <div style="position:relative;height:220px"><canvas id="p-c1"></canvas></div>
       </div>
       <div class="cc">
@@ -252,7 +252,7 @@ tbody tr:hover td{background:var(--ink3)}
     <div class="cg cg-33">
       <div class="cc">
         <div class="ch"><span class="ct">Resultado por Ano</span><span class="cbadge">ANUAL</span></div>
-        <div class="leg"><span><span class="ld" style="background:#5ad2ff"></span>Aprovadas</span><span><span class="ld" style="background:#8c7cff"></span>Reprovadas</span><span><span class="ld" style="background:#c49dff"></span>Aguardando</span></div>
+        <div class="leg"><span><span class="ld" style="background:var(--green)"></span>Aprovadas</span><span><span class="ld" style="background:var(--red)"></span>Reprovadas</span><span><span class="ld" style="background:var(--amber)"></span>Aguardando</span></div>
         <div style="position:relative;height:220px"><canvas id="o-c1"></canvas></div>
       </div>
       <div class="cc">
@@ -564,25 +564,25 @@ function render(data, pfx, barColor) {
     const annualMs = monthlySeries(annualD);
 
     cBar('p-c1', ms.labels, [
-      {label:'Aprovadas', data:ms.ap, bg:'#5bd8ff'},
-      {label:'Reprovadas', data:ms.rp, bg:'#ff6dc9'},
+      {label:'Aprovadas', data:ms.ap, bg:'var(--green)'},
+      {label:'Reprovadas', data:ms.rp, bg:'var(--red)'},
     ]);
     cDoughnut('p-c2',
       ['Aprovadas','Reprovadas'],
       [aprov.length, reprov.length],
-      ['#5bd8ff','#ff6dc9']
+      ['var(--green)','var(--red)']
     );
     cBar('p-c3', ms.labels, [
-      {label:'Valor Aprovado', data:ms.vAp, bg:'#50e1b4'},
-      {label:'Valor Reprovado', data:ms.vRp, bg:'#5c7dff'},
+      {label:'Valor Aprovado', data:ms.vAp, bg:'var(--green)'},
+      {label:'Valor Reprovado', data:ms.vRp, bg:'var(--red)'},
     ]);
     cLineMulti('p-c4', annualMs.labels, [
-      {label:'Aprovadas acumuladas', data:annualMs.apCum, color:'#5bd8ff'},
-      {label:'Reprovadas acumuladas', data:annualMs.rpCum, color:'#ff6dc9'},
+      {label:'Aprovadas acumuladas', data:annualMs.apCum, color:'var(--green)'},
+      {label:'Reprovadas acumuladas', data:annualMs.rpCum, color:'var(--red)'},
     ]);
     cLineMulti('p-c5', annualMs.labels, [
-      {label:'Valor aprovado acumulado', data:annualMs.vApCum, color:'#50e1b4'},
-      {label:'Valor reprovado acumulado', data:annualMs.vRpCum, color:'#5c7dff'},
+      {label:'Valor aprovado acumulado', data:annualMs.vApCum, color:'var(--green)'},
+      {label:'Valor reprovado acumulado', data:annualMs.vRpCum, color:'var(--red)'},
     ], v => 'R$'+fmt(v));
   } else {
     // Year keys — sorted unique YYYY from filtered data
@@ -600,18 +600,18 @@ function render(data, pfx, barColor) {
     });
 
     cBar(pfx+'-c1', lbs, [
-      {label:'Aprovadas',  data:apByM, bg:'#5bd8ff'},
-      {label:'Reprovadas', data:rpByM, bg:'#ff6dc9'},
-      {label:'Aguardando', data:agByM, bg:'#d3b3ff'},
+      {label:'Aprovadas',  data:apByM, bg:'var(--green)'},
+      {label:'Reprovadas', data:rpByM, bg:'var(--red)'},
+      {label:'Aguardando', data:agByM, bg:'var(--amber)'},
     ]);
     cDoughnut(pfx+'-c2',
       ['Aprovadas','Reprovadas','Aguardando'],
       [aprov.length, reprov.length, aguard.length],
-      ['#5bd8ff','#ff6dc9','#d3b3ff']
+      ['var(--green)','var(--red)','var(--amber)']
     );
     cBarMono(pfx+'-c3', lbs, vApByM, barColor);
-    cBarMono(pfx+'-c4', lbs, vRpByM, '#ff6dc9');
-    cLine(pfx+'-c5', lbs, tpByM, '#4f6dff');
+    cBarMono(pfx+'-c4', lbs, vRpByM, 'var(--red)');
+    cLine(pfx+'-c5', lbs, tpByM, 'var(--green)');
   }
 
   // Detail table
@@ -629,8 +629,10 @@ function render(data, pfx, barColor) {
   </tr>`).join('');
 }
 
-function renderP() { render(PD, 'p', '#2c4dff'); }
-function renderO() { render(OD, 'o', '#5c7dff'); }
+const posNegColor = value => value >= 0 ? 'var(--green)' : 'var(--red)';
+
+function renderP() { render(PD, 'p', posNegColor); }
+function renderO() { render(OD, 'o', posNegColor); }
 
 // ── Charts ────────────────────────────────────────────────────────────────
 const gc = '#1e2535';
@@ -670,12 +672,9 @@ const fixedValueLabels = {
         if (label === '') return;
 
         ctx.fillStyle = options.color || '#f4f5f8';
-        ctx.strokeStyle = options.strokeColor || '#1c2030';
-        ctx.lineWidth = options.strokeWidth || 4;
 
         if (chartType === 'doughnut' || chartType === 'pie') {
           const position = element.tooltipPosition();
-          ctx.strokeText(label, position.x, position.y);
           ctx.fillText(label, position.x, position.y);
           return;
         }
@@ -683,7 +682,6 @@ const fixedValueLabels = {
         const position = element.tooltipPosition();
         const offset = options.offset || 10;
         const y = chartType === 'bar' ? position.y - offset : position.y - offset - (datasetIndex * 12);
-        ctx.strokeText(label, position.x, y);
         ctx.fillText(label, position.x, y);
       });
     });
@@ -694,11 +692,24 @@ const fixedValueLabels = {
 
 Chart.register(fixedValueLabels);
 
+function resolveCssColor(value) {
+  if (typeof value !== 'string') return value;
+  const match = value.match(/var\((--[a-zA-Z0-9-_]+)\)/);
+  if (!match) return value;
+  const cssValue = getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim();
+  return cssValue || value;
+}
+
 function cBar(id, labels, datasets) {
   kill(id);
   new Chart(g(id), {
     type:'bar',
-    data:{labels, datasets:datasets.map(ds=>({label:ds.label,data:ds.data,backgroundColor:ds.bg+'cc',borderRadius:5,borderSkipped:false}))},
+    data:{labels, datasets:datasets.map(ds => {
+      const backgroundColor = typeof ds.bg === 'function'
+        ? ds.data.map(v => resolveCssColor(ds.bg(v)))
+        : resolveCssColor(ds.bg);
+      return {label:ds.label, data:ds.data, backgroundColor, borderRadius:5, borderSkipped:false};
+    })},
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},
       plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:8,padding:14,color:'#f0f6ff'}}},
@@ -707,9 +718,12 @@ function cBar(id, labels, datasets) {
 }
 function cBarMono(id, labels, data, color) {
   kill(id);
+  const backgroundColor = typeof color === 'function'
+    ? data.map(v => resolveCssColor(color(v)))
+    : resolveCssColor(color);
   new Chart(g(id), {
     type:'bar',
-    data:{labels,datasets:[{data,backgroundColor:color+'aa',borderRadius:5,borderSkipped:false}]},
+    data:{labels,datasets:[{data,backgroundColor,borderRadius:5,borderSkipped:false}]},
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},
       plugins:{legend:{display:false}},
@@ -718,9 +732,10 @@ function cBarMono(id, labels, data, color) {
 }
 function cDoughnut(id, labels, data, colors) {
   kill(id);
+  const resolvedColors = colors.map(resolveCssColor);
   new Chart(g(id), {
     type:'doughnut',
-    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:6}]},
+    data:{labels,datasets:[{data,backgroundColor:resolvedColors,borderWidth:0,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
       layout:{padding:18},
       plugins:{legend:{position:'bottom',labels:{boxWidth:8,padding:14}}}}
@@ -728,9 +743,10 @@ function cDoughnut(id, labels, data, colors) {
 }
 function cLine(id, labels, data, color) {
   kill(id);
+  const resolved = resolveCssColor(color);
   new Chart(g(id), {
     type:'line',
-    data:{labels,datasets:[{data,borderColor:color,backgroundColor:color+'18',fill:true,tension:.45,pointRadius:3,pointBackgroundColor:color,borderWidth:2}]},
+    data:{labels,datasets:[{data,borderColor:resolved,backgroundColor:resolved+'18',fill:true,tension:.45,pointRadius:3,pointBackgroundColor:resolved,borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},
       plugins:{legend:{display:false}},
@@ -744,17 +760,20 @@ function cLineMulti(id, labels, datasets, tickFormatter) {
     type:'line',
     data:{
       labels,
-      datasets:datasets.map(ds => ({
-        data:ds.data,
-        borderColor:ds.color,
-        backgroundColor:ds.color+'18',
-        fill:false,
-        tension:.35,
-        pointRadius:3,
-        pointBackgroundColor:ds.color,
-        borderWidth:2,
-        label:ds.label,
-      }))
+      datasets:datasets.map(ds => {
+        const resolvedColor = resolveCssColor(ds.color);
+        return {
+          data:ds.data,
+          borderColor:resolvedColor,
+          backgroundColor:resolvedColor+'18',
+          fill:false,
+          tension:.35,
+          pointRadius:3,
+          pointBackgroundColor:resolvedColor,
+          borderWidth:2,
+          label:ds.label,
+        };
+      })
     },
     options:{responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:20}},

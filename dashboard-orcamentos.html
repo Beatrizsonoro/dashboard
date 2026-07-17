@@ -9,16 +9,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --ink:#0f1117;--ink2:#1c2030;--ink3:#252b3b;
-  --line:#2e3447;--line2:#3b4260;
-  --muted:#7b839e;--ghost:#4a5168;
-  --white:#f4f5f8;--white2:#e8eaf0;
-  --gold:#c9a84c;--gold2:#e8c96a;--goldbg:rgba(201,168,76,.10);
-  --green:#3ecf8e;--greenbg:rgba(62,207,142,.10);
-  --red:#f16363;--redbg:rgba(241,99,99,.10);
-  --blue:#5b8ef0;--bluebg:rgba(91,142,240,.10);
-  --amber:#f5a623;--amberbg:rgba(245,166,35,.10);
-  --r:12px;--r2:8px;
+  --ink:#060618;--ink2:#060618;--ink3:#060618;
+  --line:#26262c;--line2:#34343c;
+  --muted:#8a8a94;--ghost:#5c5c66;
+  --white:#9eb0ff;--white2:#9eb0ff;
+  --gold:#9eb0ff;--gold2:#9eb0ff;--goldbg:rgba(201,201,207,.10);
+  --green:#17c907;--greenbg:rgba(62,207,142,.10);
+  --red:#ec0808;--redbg:rgba(241,101,101,.10);
+  --blue:#0055ff;--blue2:#5b8def;--bluebg:rgba(62, 84, 136, 0.1);
+  --purple:#066896;--purplebg:rgba(157,140,241,.10);
+  --amber:#0055ff;--amberbg:rgba(224,167,94,.10);
+  --r:18px;--r2:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--white);min-height:100vh}
@@ -31,7 +32,7 @@ body>*{position:relative;z-index:1}
 /* HEADER */
 .hdr{background:var(--ink2);border-bottom:1px solid var(--line);padding:0 32px;display:flex;align-items:center;gap:16px;height:64px}
 .logo{display:flex;align-items:center;gap:10px}
-.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:grid;place-items:center;font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);box-shadow:0 4px 12px rgba(201,168,76,.35);flex-shrink:0}
+.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:grid;place-items:center;font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);box-shadow:0 4px 12px rgb(58, 62, 253);flex-shrink:0}
 .logo-text{font-size:15px;font-weight:600;color:var(--white);letter-spacing:-.01em}
 .logo-sub{font-size:11px;color:var(--muted)}
 .hdr-mid{flex:1;display:flex;gap:8px}
@@ -39,8 +40,8 @@ body>*{position:relative;z-index:1}
 .hdr-chip b{color:var(--gold);font-weight:600}
 .btn{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--line);background:var(--ink3);color:var(--muted);transition:all .18s;white-space:nowrap}
 .btn:hover{border-color:var(--line2);color:var(--white)}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:transparent;color:var(--ink);font-weight:600;box-shadow:0 4px 14px rgba(201,168,76,.3)}
-.btn-gold:hover{box-shadow:0 6px 20px rgba(201,168,76,.45);transform:translateY(-1px);color:var(--ink)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:transparent;color:var(--ink);font-weight:600;box-shadow:0 4px 14px rgb(76, 120, 241)}
+.btn-gold:hover{box-shadow:0 6px 20px rgb(81, 122, 255);transform:translateY(-1px);color:var(--ink)}
 input[type=file]{display:none}
 
 /* TABS */
@@ -49,7 +50,7 @@ input[type=file]{display:none}
 .tab:hover{color:var(--white2)}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
 .tab-badge{font-size:10px;font-weight:700;background:var(--ink3);color:var(--muted);padding:1px 7px;border-radius:20px;border:1px solid var(--line);transition:.18s}
-.tab.active .tab-badge{background:var(--goldbg);color:var(--gold);border-color:rgba(201,168,76,.3)}
+.tab.active .tab-badge{background:var(--goldbg);color:var(--gold);border-color:rgb(255, 240, 199)}
 
 /* LAYOUT */
 .wrap{max-width:1480px;margin:0 auto;padding:28px 32px}
