@@ -1,0 +1,4 @@
+NS/Proposta,Cliente,Equipamento,Status,Valor Aprovado,Valor Reprovado,Valor,Data Envio,Data Retorno,Dias Espera,Responsavel
+P-001,ACME,Impressora X,Aprovado,1500,,1500,01/04/2026,03/04/2026,2,Joao
+P-002,Globex,Scanner Y,Reprovado,,500,500,05/04/2026,10/04/2026,5,Maria
+P-003,Initech,Servidor Z,Aguardando,, ,2500,12/04/2026,, ,Carlos

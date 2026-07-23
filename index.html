@@ -87,6 +87,7 @@ input[type=file]{display:none}
 .kpi.red::before{background:var(--red)}
 .kpi.blue::before{background:var(--blue)}
 .kpi.amber::before{background:var(--amber)}
+.kpi.purple::before{background:var(--purple)}
 .kpi.grey::before{background:var(--ghost)}
 .kpi-inner{position:relative;z-index:1}
 .kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
@@ -148,7 +149,8 @@ tbody tr:hover td{background:var(--ink3)}
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     Importar Planilha
   </button>
-  <input type="file" id="fi" accept=".xlsx,.xls" onchange="importExcel(event)">
+  <input type="file" id="fi" accept=".xlsx,.xls,.csv" onchange="importExcel(event)">
+  <span id="fi-name" style="margin-left:12px;color:var(--muted);font-size:13px"></span>
 </header>
 
 <nav class="tabs">
@@ -297,58 +299,234 @@ function switchTab(t) {
 // ── Import ─────────────────────────────────────────────────────────────
 function importExcel(e) {
   const file = e.target.files[0]; if (!file) return;
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  // mostrar nome do arquivo
+  const nameEl = g('fi-name'); if (nameEl) nameEl.textContent = file.name;
   const reader = new FileReader();
   reader.onload = ev => {
-    // cellDates:true → datetime cells come as UTC Date objects
-    const wb = XLSX.read(ev.target.result, { type:'binary', cellDates:true });
-    const find = kw => wb.SheetNames.find(s => s.toLowerCase().includes(kw));
-    const snP = find('oportunidade'), snO = find('pedido');
-    if (!snP && !snO) { alert('Abas "Oportunidade" e "Pedidos" não encontradas.'); return; }
+    try {
+      console.log('Importando planilha...');
+      // CSV handling
+      if (ext === 'csv') {
+        const text = String(ev.target.result || '');
+        const rows = parseCsv(text);
+        const val = validateSheetRows(rows);
+        if (!val.ok) { console.error('Erros no CSV:', val.errors); alert('Erros na importação: verifique o painel de debug.'); return; }
+        // decide se é oportunidades ou pedidos pelo nome do arquivo
+        if (file.name.toLowerCase().includes('pedido')) {
+          OD = parseRows(rows, 'oportunidades');
+          fillFilters('o', OD);
+          g('o-splash').style.display = 'none';
+          g('o-content').style.display = 'block';
+          const o2026 = OD.filter(r => r.dataEnvio && r.dataEnvio.getFullYear && r.dataEnvio.getFullYear() === 2026).length;
+          g('chip-o').innerHTML = `Pedidos: <b>${o2026}</b>`;
+          g('tb-o').textContent = o2026;
+          console.log('Pedidos importados (CSV):', OD.length);
+        } else {
+          PD = parseRows(rows, 'proposta');
+          fillFilters('p', PD);
+          g('p-splash').style.display = 'none';
+          g('p-content').style.display = 'block';
+          const p2026 = PD.filter(r => r.dataEnvio && r.dataEnvio.getFullYear && r.dataEnvio.getFullYear() === 2026).length;
+          g('chip-p').innerHTML = `Oportunidade: <b>${p2026}</b>`;
+          g('tb-p').textContent = p2026;
+          console.log('Oportunidades importadas (CSV):', PD.length);
+        }
+        renderP(); renderO();
+        alert('Importação concluída (CSV). Verifique os filtros e tabelas.');
+        return;
+      }
 
-    if (snP) {
-      // raw:true preserves Date objects; header row is row index 1 (row 2 in Excel)
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[snP], {header:1, raw:true, defval:null});
-      PD = parseRows(rows, 'proposta');
-      fillFilters('p', PD);
-      g('p-splash').style.display = 'none';
-      g('p-content').style.display = 'block';
-      const p2026 = PD.filter(r => r.dataEnvio.getFullYear() === 2026).length;
-      g('chip-p').innerHTML = `Oportunidade: <b>${p2026}</b>`;
-      g('tb-p').textContent = p2026;
+      const data = ev.target.result;
+      let wb;
+      if (data instanceof ArrayBuffer) {
+        wb = XLSX.read(data, { type: 'array', cellDates: true });
+      } else if (typeof data === 'string') {
+        wb = XLSX.read(data, { type: 'binary', cellDates: true });
+      } else {
+        // fallback: try Uint8Array
+        wb = XLSX.read(new Uint8Array(data), { type: 'array', cellDates: true });
+      }
+
+      console.log('Abas detectadas:', wb.SheetNames);
+      const find = kw => wb.SheetNames.find(s => normalizeKey(s).includes(normalizeKey(kw)));
+      const snP = find('oportunidade') || find('oportunidades') || find('proposta');
+      const snO = find('pedido') || find('pedidos');
+      if (!snP && !snO) { alert('Abas "Oportunidade" e "Pedidos" não encontradas.'); return; }
+
+      if (snP) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[snP], { header:1, raw:true, defval:null });
+        const val = validateSheetRows(rows);
+        if (!val.ok) { console.error('Erros na aba Oportunidade:', val.errors); alert('Erros na importação: verifique o painel de debug.'); return; }
+        PD = parseRows(rows, 'proposta');
+        fillFilters('p', PD);
+        g('p-splash').style.display = 'none';
+        g('p-content').style.display = 'block';
+        const p2026 = PD.filter(r => r.dataEnvio && r.dataEnvio.getFullYear && r.dataEnvio.getFullYear() === 2026).length;
+        g('chip-p').innerHTML = `Oportunidade: <b>${p2026}</b>`;
+        g('tb-p').textContent = p2026;
+        console.log('Oportunidades importadas:', PD.length);
+      }
+
+      if (snO) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[snO], { header:1, raw:true, defval:null });
+        const val = validateSheetRows(rows);
+        if (!val.ok) { console.error('Erros na aba Pedidos:', val.errors); alert('Erros na importação: verifique o painel de debug.'); return; }
+        OD = parseRows(rows, 'oportunidades');
+        fillFilters('o', OD);
+        g('o-splash').style.display = 'none';
+        g('o-content').style.display = 'block';
+        const o2026 = OD.filter(r => r.dataEnvio && r.dataEnvio.getFullYear && r.dataEnvio.getFullYear() === 2026).length;
+        g('chip-o').innerHTML = `Pedidos: <b>${o2026}</b>`;
+        g('tb-o').textContent = o2026;
+        console.log('Pedidos importados:', OD.length);
+      }
+
+      renderP(); renderO();
+      alert('Importação concluída. Verifique os filtros e tabelas.');
+    } catch (err) {
+      console.error('Erro ao ler planilha', err);
+      alert('Erro ao ler a planilha: ' + (err && err.message ? err.message : err));
     }
-    if (snO) {
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[snO], {header:1, raw:true, defval:null});
-      OD = parseRows(rows, 'oportunidades');
-      fillFilters('o', OD);
-      g('o-splash').style.display = 'none';
-      g('o-content').style.display = 'block';
-      const o2026 = OD.filter(r => r.dataEnvio.getFullYear() === 2026).length;
-      g('chip-o').innerHTML = `Pedidos: <b>${o2026}</b>`;
-      g('tb-o').textContent = o2026;
-    }
-    renderP(); renderO();
   };
-  reader.readAsBinaryString(file);
+  // Ler CSV como texto; XLSX como ArrayBuffer quando possível
+  if (ext === 'csv') {
+    reader.readAsText(file, 'UTF-8');
+  } else if (typeof reader.readAsArrayBuffer === 'function') {
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.readAsBinaryString(file);
+  }
   e.target.value = '';
 }
 
 // ── Parse sheet rows ────────────────────────────────────────────────────
 // Structure: row[0]=instruction or header, row[1]=headers or first data row
+function normalizeKey(v) {
+  return String(v ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\$|[%ºª]/g, '')
+    .replace(/[^a-z0-9]+/g, '')
+    .trim();
+}
+
+// ── CSV parser (simples, trata aspas e delimitador vírgula) ──────────────
+function parseCsv(text) {
+  const rows = [];
+  let cur = [];
+  let curCell = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i+1];
+    if (ch === '"') {
+      if (inQuotes && next === '"') { curCell += '"'; i++; continue; }
+      inQuotes = !inQuotes; continue;
+    }
+    if (!inQuotes && (ch === '\n' || ch === '\r')) {
+      if (ch === '\r' && text[i+1] === '\n') { /* skip, handled by \n */ }
+      if (curCell !== '' || cur.length) cur.push(curCell === '' ? null : curCell);
+      if (cur.length) rows.push(cur);
+      cur = []; curCell = ''; inQuotes = false; continue;
+    }
+    if (!inQuotes && ch === ',') { cur.push(curCell === '' ? null : curCell); curCell = ''; continue; }
+    curCell += ch;
+  }
+  if (curCell !== '' || cur.length) cur.push(curCell === '' ? null : curCell);
+  if (cur.length) rows.push(cur);
+  // Trim whitespace around cells
+  return rows.map(r => r.map(c => c == null ? null : String(c).trim()));
+}
+
+// ── Detecção de cabeçalho e validação de planilha ─────────────────────────
+function findHeaderRow(rows) {
+  const knownCols = [
+    'id','ns/proposta','numero_serie','cliente','equipamento','peca','peça','valor_inicial','valor_peca','valor_servico','valor_serviço','valor_aprovado','valor_reprovado','valor','data_envio','data_retorno','data_fechamento','espera_geral','espera_geral','espera_mensal','aprovado_mesmo_mes','aprovado_mes_diferente','followup1','data_contato','followup2','data_contato2','responsavel','status','base'
+  ];
+  const knownSet = new Set(knownCols.map(normalizeKey));
+  let best = { index:-1, score:0, row: null };
+  const limit = Math.min(rows.length, 10);
+  for (let i = 0; i < limit; i++) {
+    const row = rows[i];
+    if (!Array.isArray(row)) continue;
+    let score = 0;
+    row.forEach(cell => {
+      if (cell != null) {
+        const normVal = normalizeKey(cell);
+        for (const known of knownSet) {
+          if (normVal === known || normVal.includes(known) || known.includes(normVal)) {
+            score++;
+            break;
+          }
+        }
+      }
+    });
+    if (score > best.score) best = { index:i, score, row };
+  }
+  return best.score > 0 ? best : null;
+}
+
+function validateSheetRows(rows) {
+  const errors = [];
+  if (!Array.isArray(rows) || rows.length < 2) {
+    errors.push('Planilha vazia ou sem linhas suficientes.');
+    return { ok:false, errors };
+  }
+
+  const headerInfo = findHeaderRow(rows);
+  if (!headerInfo) {
+    errors.push('Cabeçalho não reconhecido. Verifique nomes das colunas.');
+    return { ok:false, errors };
+  }
+
+  const { row: headerRow, index } = headerInfo;
+  const startRow = index + 1;
+  const hdr = headerRow.map(h => h != null ? String(h).trim() : '');
+  const normHdr = hdr.map(normalizeKey);
+  const has = k => normHdr.some(h => h.includes(normalizeKey(k)) || normalizeKey(k).includes(h));
+  // requer pelo menos status e uma data (envio ou retorno)
+  if (!has('status')) errors.push('Coluna "status" não encontrada no cabeçalho.');
+  if (!has('data_envio') && !has('data_retorno')) errors.push('Necessária coluna "data_envio" ou "data_retorno".');
+  if (!has('cliente')) errors.push('Coluna "cliente" não encontrada.');
+
+  // checar por linhas com data inválida
+  for (let i = startRow; i < rows.length; i++) {
+    const r = rows[i]; if (!r || r.every(c => c === null || c === '')) continue;
+    const obj = {};
+    hdr.forEach((h, ci) => { if (h) obj[h] = r[ci] ?? null; });
+    const valDataEnvio = getCellValue(obj, 'data_envio', 'data envio', 'data de envio', 'data_envio_', 'data de envio ');
+    const valDataRetorno = getCellValue(obj, 'data_retorno', 'data retorno', 'data de retorno', 'data de retorno ');
+    const dEnv = parseDate(valDataEnvio);
+    const dRet = parseDate(valDataRetorno);
+    if (!dEnv && !dRet) {
+      errors.push(`Linha ${i+1}: data inválida ou ausente (colunas data_envio/data_retorno).`);
+      if (errors.length > 20) break;
+    }
+  }
+
+  return { ok: errors.length === 0, errors };
+}
+
+function getCellValue(o, ...keys) {
+  const wanted = keys.map(normalizeKey);
+  for (const [key, value] of Object.entries(o)) {
+    if (value == null || value === '') continue;
+    if (wanted.includes(normalizeKey(key))) return value;
+  }
+  return null;
+}
+
+
 function parseRows(rows, type) {
   if (rows.length < 2) return [];
 
-  const knownCols = ['ns/proposta','cliente','equipamento','status','valor_aprovado','valor_reprovado','data_envio','data_retorno','dias_espera','responsavel','valor'];
-  const normHdr = v => v == null ? '' : String(v).trim().toLowerCase().replace(/\s+/g,'_');
-  const rowHasHeader = row => Array.isArray(row) && row.some(cell => knownCols.includes(normHdr(cell)));
+  const headerInfo = findHeaderRow(rows);
+  if (!headerInfo) return [];
 
-  let headerRow = rows[1];
-  let startRow = 2;
-  if (!rowHasHeader(rows[1]) && rowHasHeader(rows[0])) {
-    headerRow = rows[0];
-    startRow = 1;
-  }
-  if (!rowHasHeader(headerRow)) return [];
-
+  const headerRow = headerInfo.row;
+  const startRow = headerInfo.index + 1;
   const hdr = headerRow.map(h => h != null ? String(h).trim() : '');
   const out = [];
 
@@ -356,25 +534,44 @@ function parseRows(rows, type) {
     const r = rows[i];
     if (!r || r.every(c => c === null || c === '')) continue;
 
-    // Build object by column name — robust to column order changes
     const o = {};
     hdr.forEach((h, ci) => { if (h) o[h] = r[ci] ?? null; });
 
-    // normalize status and parse the date
-    const status = normStatus(o['status']);
-    const dt = parseDate(o['data_retorno']) || parseDate(o['Data_Envio']);
-    if (!dt) continue;
+    const status = normStatus(getCellValue(o, 'status'));
+    const dataEnvio = parseDate(getCellValue(o, 'data_envio', 'data envio', 'data de envio', 'data_envio_'));
+    const dataRetorno = parseDate(getCellValue(o, 'data_retorno', 'data retorno', 'data de retorno'));
+    const effectiveDataEnvio = dataEnvio || dataRetorno;
+    if (!effectiveDataEnvio) continue;
+
+    const esperaGeral = numOrNull(getCellValue(o, 'espera_geral', 'espera geral', 'dias_espera', 'dias espera'));
+    const esperaMensal = numOrNull(getCellValue(o, 'espera_mensal', 'espera mensal'));
+    const aprovadoMesmoMes = numVal(getCellValue(o, 'aprovado_mesmo_mes', 'aprovado mesmo mes'));
+    const aprovadoMesDiferente = numVal(getCellValue(o, 'aprovado_mes_diferente', 'aprovado mes diferente'));
+
+    const valorAprovadoRaw = numVal(getCellValue(o, 'valor_aprovado', 'valor aprovado', 'valoraprovado'));
+    const valorReprovadoRaw = numVal(getCellValue(o, 'valor_reprovado', 'valor reprovado', 'valorreprovado'));
+    const valorRaw = numVal(getCellValue(o, 'valor', 'valor total'));
+
+    const statusIsFinalized = status === 'Aprovado' || status === 'Reprovado';
+    const sameMonth = !!(dataEnvio && dataRetorno && dataEnvio.getFullYear() === dataRetorno.getFullYear() && dataEnvio.getMonth() === dataRetorno.getMonth());
+    const computedMesmoMes = aprovadoMesmoMes > 0 || (statusIsFinalized && dataEnvio && dataRetorno && sameMonth ? 1 : 0);
+    const computedMesDiferente = aprovadoMesDiferente > 0 || (statusIsFinalized && dataEnvio && dataRetorno && !sameMonth ? 1 : 0);
 
     out.push({
-      ns:            strVal(o['NS/Proposta']),
-      cliente:       strVal(o['Cliente']),
-      equipamento:   strVal(o['Equipamento']),
-      dataEnvio:     dt,
-      diasEspera:    numVal(o['dias_espera']),
-      valorAprovado: status === 'Aprovado' ? numVal(o['valor_aprovado']) : 0,
-      valorReprovado: status === 'Reprovado' ? numVal(o['valor_reprovado']) : 0,
+      ns: strVal(getCellValue(o, 'ns/proposta', 'numero_serie', 'ns proposta', 'numero serie')),
+      cliente: strVal(getCellValue(o, 'cliente')),
+      equipamento: strVal(getCellValue(o, 'equipamento')),
+      dataEnvio: effectiveDataEnvio,
+      dataRetorno,
+      esperaGeral,
+      esperaMensal,
+      aprovadoMesmoMes: computedMesmoMes,
+      aprovadoMesDiferente: computedMesDiferente,
+      diasEspera: esperaGeral ?? (dataEnvio && dataRetorno && sameMonth ? diffDays(dataEnvio, dataRetorno) : 0),
+      valorAprovado: status === 'Aprovado' ? (valorAprovadoRaw || valorRaw) : 0,
+      valorReprovado: status === 'Reprovado' ? (valorReprovadoRaw || valorRaw) : 0,
       status,
-      responsavel:   strVal(o['responsavel']),
+      responsavel: strVal(getCellValue(o, 'responsavel')),
     });
   }
 
@@ -390,7 +587,6 @@ function parseDate(v) {
 
   if (v instanceof Date) {
     if (isNaN(v.getTime())) return null;
-    // Use UTC getters to avoid timezone shift
     return new Date(v.getUTCFullYear(), v.getUTCMonth(), v.getUTCDate());
   }
 
@@ -403,7 +599,6 @@ function parseDate(v) {
   const s = String(v).trim();
   if (!s || s === 'null') return null;
 
-  // Brazilian strings: "14/7/2025" or "28/08/2025" or "14/04/2026"
   let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if (m) {
     let [, dd, mm, yy] = m;
@@ -412,7 +607,6 @@ function parseDate(v) {
     return isNaN(d.getTime()) ? null : d;
   }
 
-  // ISO: "2025-08-28"
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) {
     const d = new Date(+m[1], +m[2] - 1, +m[3]);
@@ -436,36 +630,52 @@ function normStatus(v) {
 
 // ── Filters ─────────────────────────────────────────────────────────────
 function fillFilters(pfx, data) {
-  const anos = [...new Set(data.map(d => d.dataEnvio.getFullYear()))].sort();
-  g(pfx+'-ano').innerHTML = '<option value="">Todos</option>' + anos.map(a=>`<option>${a}</option>`).join('');
+  const anos = [...new Set(data.map(d => d.dataEnvio && d.dataEnvio.getFullYear && d.dataEnvio.getFullYear()))].filter(Boolean).sort();
+  const anoEl = g(pfx+'-ano'); if (anoEl) anoEl.innerHTML = '<option value="">Todos</option>' + anos.map(a=>`<option>${a}</option>`).join('');
   const resps = [...new Set(data.map(d=>d.responsavel).filter(Boolean))].sort();
-  g(pfx+'-resp').innerHTML = '<option value="">Todos</option>' + resps.map(r=>`<option>${r}</option>`).join('');
+  const respEl = g(pfx+'-resp'); if (respEl) respEl.innerHTML = '<option value="">Todos</option>' + resps.map(r=>`<option>${r}</option>`).join('');
+  const equips = [...new Set(data.map(d=>d.equipamento).filter(Boolean))].sort();
+  const equipEl = g(pfx+'-equip'); if (equipEl) equipEl.innerHTML = '<option value="">Todos</option>' + equips.map(r=>`<option>${r}</option>`).join('');
+  const clientes = [...new Set(data.map(d=>d.cliente).filter(Boolean))].sort();
+  const clienteEl = g(pfx+'-cliente'); if (clienteEl) clienteEl.innerHTML = '<option value="">Todos</option>' + clientes.map(r=>`<option>${r}</option>`).join('');
 }
 
 function getFiltered(data, pfx) {
-  const mes  = g(pfx+'-mes').value;
-  const ano  = g(pfx+'-ano').value;
-  const resp = g(pfx+'-resp').value;
+  const mesEl = g(pfx+'-mes'); const mes  = mesEl ? mesEl.value : '';
+  const anoEl = g(pfx+'-ano'); const ano  = anoEl ? anoEl.value : '';
+  const respEl = g(pfx+'-resp'); const resp = respEl ? respEl.value : '';
+  const equipEl = g(pfx+'-equip'); const equip = equipEl ? equipEl.value : '';
+  const clienteEl = g(pfx+'-cliente'); const cliente = clienteEl ? clienteEl.value : '';
+  const statusEl = g(pfx+'-status'); const status = statusEl ? statusEl.value : '';
   return data.filter(d => {
     if (mes  && (d.dataEnvio.getMonth()+1) !== +mes)  return false;
     if (ano  &&  d.dataEnvio.getFullYear() !== +ano)  return false;
     if (resp && d.responsavel !== resp)                return false;
+    if (equip && d.equipamento !== equip)              return false;
+    if (cliente && d.cliente !== cliente)              return false;
+    if (status && d.status !== status)                  return false;
     return true;
   });
 }
 
 function getFilteredAnnual(data, pfx) {
-  const resp = g(pfx+'-resp').value;
+  const respEl = g(pfx+'-resp'); const resp = respEl ? respEl.value : '';
+  const equipEl = g(pfx+'-equip'); const equip = equipEl ? equipEl.value : '';
+  const clienteEl = g(pfx+'-cliente'); const cliente = clienteEl ? clienteEl.value : '';
+  const statusEl = g(pfx+'-status'); const status = statusEl ? statusEl.value : '';
   const anoAtual = new Date().getFullYear();
   return data.filter(d => {
-    if (d.dataEnvio.getFullYear() !== anoAtual)       return false;
+    if (!d.dataEnvio || d.dataEnvio.getFullYear() !== anoAtual)       return false;
     if (resp && d.responsavel !== resp)                return false;
+    if (equip && d.equipamento !== equip)              return false;
+    if (cliente && d.cliente !== cliente)              return false;
+    if (status && d.status !== status)                  return false;
     return true;
   });
 }
 
 function clearF(pfx) {
-  ['mes','ano','resp'].forEach(f => { const el=g(pfx+'-'+f); if(el) el.selectedIndex=0; });
+  ['mes','ano','resp','equip','cliente','status'].forEach(f => { const el=g(pfx+'-'+f); if(el) el.selectedIndex=0; });
   pfx==='p' ? renderP() : renderO();
 }
 
@@ -527,103 +737,131 @@ function monthlySeries(data) {
   };
 }
 
+function monthlyClosingSeries(data) {
+  const buckets = new Map();
+  data.forEach(r => {
+    if (!r.dataEnvio) return;
+    const key = mKey(r.dataEnvio);
+    if (!buckets.has(key)) buckets.set(key, { same:0, diff:0 });
+    const bucket = buckets.get(key);
+    if (r.aprovadoMesmoMes) bucket.same += 1;
+    if (r.aprovadoMesDiferente) bucket.diff += 1;
+  });
+
+  const labels = [...buckets.keys()].sort();
+  return {
+    labels: labels.map(mLabel),
+    same: labels.map(k => buckets.get(k).same),
+    diff: labels.map(k => buckets.get(k).diff),
+  };
+}
+
+function monthlySentSeries(data) {
+  const buckets = new Map();
+  data.forEach(r => {
+    if (!r.dataEnvio) return;
+    const key = mKey(r.dataEnvio);
+    if (!buckets.has(key)) buckets.set(key, 0);
+    buckets.set(key, buckets.get(key) + 1);
+  });
+
+  const labels = [...buckets.keys()].sort();
+  return {
+    labels: labels.map(mLabel),
+    counts: labels.map(k => buckets.get(k)),
+  };
+}
+
 function flatSeries(labels, value) {
   return labels.map(() => value);
 }
 
 // ── Render ───────────────────────────────────────────────────────────────
+function average(values) {
+  const clean = values.filter(v => v != null && v !== '' && !Number.isNaN(v));
+  return clean.length ? clean.reduce((s, v) => s + v, 0) / clean.length : 0;
+}
+
+function diffDays(start, end) {
+  if (!start || !end) return null;
+  const diff = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return diff >= 0 ? diff : null;
+}
+
 function render(data, pfx, barColor) {
   const source = pfx === 'p' ? latestOpportunityRows(data) : data;
   const d      = getFiltered(source, pfx);
-  const rawD   = getFiltered(data, pfx);
   const aprov  = d.filter(r => r.status === 'Aprovado');
   const reprov = d.filter(r => r.status === 'Reprovado');
-  const aguard = d.filter(r => r.status === 'Aguardando');
-
-  const vAp  = aprov.reduce( (s,r) => s + r.valorAprovado,  0);
+  const vAp  = aprov.reduce((s,r) => s + r.valorAprovado, 0);
   const vRp  = reprov.reduce((s,r) => s + r.valorReprovado, 0);
-  const taxa = d.length ? Math.round(aprov.length / d.length * 100) : 0;
-  const apComDias = aprov.filter(r => r.diasEspera > 0);
-  const dMed = apComDias.length ? Math.round(apComDias.reduce((s,r)=>s+r.diasEspera,0)/apComDias.length) : 0;
-  const totalAll = d.length;
-  const aguardAll = aguard.length;
+  const totalEquipamentos = [...new Set(d.map(r => r.equipamento).filter(Boolean))].length;
+  const taxaMesmoMes = d.length ? (d.reduce((s, r) => s + (r.aprovadoMesmoMes || 0), 0) / d.length) : 0;
+  const taxaMesDiferente = d.length ? (d.reduce((s, r) => s + (r.aprovadoMesDiferente || 0), 0) / d.length) : 0;
+  const esperaMensal = d.map(r => r.esperaMensal).filter(v => v != null);
+  const esperaGeral = d.map(r => r.esperaGeral).filter(v => v != null);
+  const tempoMedioMensal = average(esperaMensal);
+  const tempoMedioGeral = average(esperaGeral);
 
   set(pfx+'-cnt', d.length+' registros');
-  set(pfx+'-k1', totalAll);
-  set(pfx+'-k2', aprov.length);
-  set(pfx+'-k3', reprov.length);
-  set(pfx+'-k4', taxa+'%');
+  set(pfx+'-k1', totalEquipamentos);
+  set(pfx+'-k2', d.length);
+  set(pfx+'-k3', aprov.length);
+  set(pfx+'-k4', reprov.length);
   set(pfx+'-k5', 'R$'+fmt(vAp));
   set(pfx+'-k6', 'R$'+fmt(vRp));
-  set(pfx+'-k7', dMed+'d');
-  set(pfx+'-k8', aguardAll);
+  set(pfx+'-k7', fmtPct(taxaMesmoMes));
+  set(pfx+'-k8', fmtPct(taxaMesDiferente));
+  set(pfx+'-k9', fmtNum(tempoMedioMensal)+'d');
+  set(pfx+'-k10', fmtNum(tempoMedioGeral)+'d');
+
+  const ms = monthlySeries(d);
+  const closingMs = monthlyClosingSeries(d);
+  const sentMs = monthlySentSeries(d);
 
   if (pfx === 'p') {
-    const annualD = getFilteredAnnual(source, pfx);
-    const ms = monthlySeries(d);
-    const annualMs = monthlySeries(annualD);
-
     cBar('p-c1', ms.labels, [
-      {label:'Aprovadas', data:ms.ap, bg:'var(--green)'},
-      {label:'Reprovadas', data:ms.rp, bg:'var(--red)'},
+      {label:'Aprovados', data:ms.ap, bg:'var(--green)'},
+      {label:'Reprovados', data:ms.rp, bg:'var(--red)'}
     ]);
-    cDoughnut('p-c2',
-      ['Aprovadas','Reprovadas'],
-      [aprov.length, reprov.length],
-      ['var(--green)','var(--red)']
-    );
-    cBar('p-c3', ms.labels, [
+    cBar('p-c2', ms.labels, [
       {label:'Valor Aprovado', data:ms.vAp, bg:'var(--green)'},
-      {label:'Valor Reprovado', data:ms.vRp, bg:'var(--red)'},
+      {label:'Valor Reprovado', data:ms.vRp, bg:'var(--red)'}
     ]);
-    cLineMulti('p-c4', annualMs.labels, [
-      {label:'Aprovadas acumuladas', data:annualMs.apCum, color:'var(--green)'},
-      {label:'Reprovadas acumuladas', data:annualMs.rpCum, color:'var(--red)'},
+    cBar('p-c3', closingMs.labels, [
+      {label:'Mesmo mês', data:closingMs.same, bg:'var(--blue)'},
+      {label:'Meses diferentes', data:closingMs.diff, bg:'var(--amber)'}
     ]);
-    cLineMulti('p-c5', annualMs.labels, [
-      {label:'Valor aprovado acumulado', data:annualMs.vApCum, color:'var(--green)'},
-      {label:'Valor reprovado acumulado', data:annualMs.vRpCum, color:'var(--red)'},
-    ], v => 'R$'+fmt(v));
+    cBarMono('p-c4', ['Média'], [tempoMedioMensal], 'var(--blue)');
+    cBarMono('p-c5', ['Média'], [tempoMedioGeral], 'var(--purple)');
+    cLine('p-c6', sentMs.labels, sentMs.counts, 'var(--green)');
   } else {
-    // Year keys — sorted unique YYYY from filtered data
-    const yks = [...new Set(d.map(r => String(r.dataEnvio.getFullYear())))].sort();
-    const lbs = yks;
-    const byY    = y => d.filter(r => String(r.dataEnvio.getFullYear()) === y);
-    const apByM  = yks.map(y => byY(y).filter(r=>r.status==='Aprovado').length);
-    const rpByM  = yks.map(y => byY(y).filter(r=>r.status==='Reprovado').length);
-    const agByM  = yks.map(y => byY(y).filter(r=>r.status==='Aguardando').length);
-    const vApByM = yks.map(y => byY(y).filter(r=>r.status==='Aprovado').reduce((s,r)=>s+r.valorAprovado,0));
-    const vRpByM = yks.map(y => byY(y).filter(r=>r.status==='Reprovado').reduce((s,r)=>s+r.valorReprovado,0));
-    const tpByM  = yks.map(y => {
-      const ap = byY(y).filter(r=>r.status==='Aprovado'&&r.diasEspera>0);
-      return ap.length ? Math.round(ap.reduce((s,r)=>s+r.diasEspera,0)/ap.length) : 0;
-    });
-
-    cBar(pfx+'-c1', lbs, [
-      {label:'Aprovadas',  data:apByM, bg:'var(--green)'},
-      {label:'Reprovadas', data:rpByM, bg:'var(--red)'},
-      {label:'Aguardando', data:agByM, bg:'var(--amber)'},
+    cBar('o-c1', ms.labels, [
+      {label:'Aprovados', data:ms.ap, bg:'var(--green)'},
+      {label:'Reprovados', data:ms.rp, bg:'var(--red)'}
     ]);
-    cDoughnut(pfx+'-c2',
-      ['Aprovadas','Reprovadas','Aguardando'],
-      [aprov.length, reprov.length, aguard.length],
-      ['var(--green)','var(--red)','var(--amber)']
-    );
-    cBarMono(pfx+'-c3', lbs, vApByM, barColor);
-    cBarMono(pfx+'-c4', lbs, vRpByM, 'var(--red)');
-    cLine(pfx+'-c5', lbs, tpByM, 'var(--green)');
+    cBar('o-c2', ms.labels, [
+      {label:'Valor Aprovado', data:ms.vAp, bg:'var(--green)'},
+      {label:'Valor Reprovado', data:ms.vRp, bg:'var(--red)'}
+    ]);
+    cBar('o-c3', closingMs.labels, [
+      {label:'Mesmo mês', data:closingMs.same, bg:'var(--blue)'},
+      {label:'Meses diferentes', data:closingMs.diff, bg:'var(--amber)'}
+    ]);
+    cBarMono('o-c4', ['Média'], [tempoMedioMensal], 'var(--blue)');
+    cBarMono('o-c5', ['Média'], [tempoMedioGeral], 'var(--purple)');
+    cLine('o-c6', sentMs.labels, sentMs.counts, 'var(--green)');
   }
 
-  // Detail table
   g(pfx+'-tbl').innerHTML = d.slice(0,200).map((r,i) => `<tr>
     <td class="dim mono">${i+1}</td>
     <td style="font-weight:500">${r.ns||'—'}</td>
     <td style="color:var(--white)">${r.cliente||'—'}</td>
     <td class="dim">${r.equipamento||'—'}</td>
     <td><span class="pill ${pillCls(r.status)}"><span class="pill-dot"></span>${r.status}</span></td>
-    <td class="mono" style="color:var(--green)">${r.valorAprovado  ? brl(r.valorAprovado)  : '<span class="dim">—</span>'}</td>
+    <td class="mono" style="color:var(--green)">${r.valorAprovado ? brl(r.valorAprovado) : '<span class="dim">—</span>'}</td>
     <td class="mono" style="color:var(--red)">${r.valorReprovado ? brl(r.valorReprovado) : '<span class="dim">—</span>'}</td>
-    <td class="mono dim">${r.diasEspera||0}d</td>
+    <td class="mono dim">${r.diasEspera != null ? r.diasEspera+'d' : '—'}</td>
     <td class="dim">${r.responsavel||'—'}</td>
     <td class="mono dim">${fmtD(r.dataEnvio)}</td>
   </tr>`).join('');
@@ -702,7 +940,8 @@ function resolveCssColor(value) {
 
 function cBar(id, labels, datasets) {
   kill(id);
-  new Chart(g(id), {
+  const el = g(id); if (!el) return;
+  new Chart(el, {
     type:'bar',
     data:{labels, datasets:datasets.map(ds => {
       const backgroundColor = typeof ds.bg === 'function'
@@ -718,10 +957,11 @@ function cBar(id, labels, datasets) {
 }
 function cBarMono(id, labels, data, color) {
   kill(id);
+  const el = g(id); if (!el) return;
   const backgroundColor = typeof color === 'function'
     ? data.map(v => resolveCssColor(color(v)))
     : resolveCssColor(color);
-  new Chart(g(id), {
+  new Chart(el, {
     type:'bar',
     data:{labels,datasets:[{data,backgroundColor,borderRadius:5,borderSkipped:false}]},
     options:{responsive:true,maintainAspectRatio:false,
@@ -732,8 +972,9 @@ function cBarMono(id, labels, data, color) {
 }
 function cDoughnut(id, labels, data, colors) {
   kill(id);
+  const el = g(id); if (!el) return;
   const resolvedColors = colors.map(resolveCssColor);
-  new Chart(g(id), {
+  new Chart(el, {
     type:'doughnut',
     data:{labels,datasets:[{data,backgroundColor:resolvedColors,borderWidth:0,hoverOffset:6}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
@@ -743,8 +984,9 @@ function cDoughnut(id, labels, data, colors) {
 }
 function cLine(id, labels, data, color) {
   kill(id);
+  const el = g(id); if (!el) return;
   const resolved = resolveCssColor(color);
-  new Chart(g(id), {
+  new Chart(el, {
     type:'line',
     data:{labels,datasets:[{data,borderColor:resolved,backgroundColor:resolved+'18',fill:true,tension:.45,pointRadius:3,pointBackgroundColor:resolved,borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
@@ -756,7 +998,8 @@ function cLine(id, labels, data, color) {
 
 function cLineMulti(id, labels, datasets, tickFormatter) {
   kill(id);
-  new Chart(g(id), {
+  const el = g(id); if (!el) return;
+  new Chart(el, {
     type:'line',
     data:{
       labels,
@@ -792,6 +1035,11 @@ function numVal(v) {
   const n = parseFloat(String(v).replace(',','.'));
   return isNaN(n) ? 0 : n;
 }
+function numOrNull(v) {
+  if (v == null || v === '' || v === 'N/A' || v === 'n/a') return null;
+  const n = parseFloat(String(v).replace(',','.'));
+  return isNaN(n) ? null : n;
+}
 function mKey(d)   { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
 function mLabel(k) { const [y,m]=k.split('-'); return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][+m-1]+'/'+y.slice(2); }
 function fmt(n) {
@@ -800,12 +1048,36 @@ function fmt(n) {
   if(n>=1e3) return (n/1e3).toFixed(0)+'K';
   return Math.round(n).toLocaleString('pt-BR');
 }
+function fmtPct(v) {
+  const pct = Number(v) * 100;
+  return `${Number.isFinite(pct) ? pct.toFixed(1) : '0.0'}%`;
+}
+function fmtNum(v) {
+  return Number(v || 0).toFixed(0);
+}
 function brl(n) { return 'R$ '+(+n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtD(d) {
   if(!d) return '—';
   return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
 }
 function pillCls(s) { return s==='Aprovado'?'pg':s==='Reprovado'?'pr':'pag'; }
+</script>
+<!-- Debug panel (apenas para diagnóstico) -->
+<div id="debug" style="position:fixed;right:12px;bottom:12px;width:320px;max-height:240px;overflow:auto;background:#071024;border:1px solid rgba(255,255,255,.04);padding:8px;border-radius:8px;color:#9eb0ff;font-size:12px;z-index:9999"></div>
+<script>
+  (function(){
+    const dbg = document.getElementById('debug');
+    if (!dbg) return;
+    const fmt = (args) => args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+    const append = (msg, cls) => {
+      const el = document.createElement('div'); el.style.marginBottom='6px'; if (cls==='err') el.style.color='#ff8080'; el.textContent = msg; dbg.appendChild(el); dbg.scrollTop = dbg.scrollHeight;
+    };
+    const origLog = console.log.bind(console);
+    const origErr = console.error.bind(console);
+    console.log = function(...args){ origLog(...args); append(fmt(args), 'log'); };
+    console.error = function(...args){ origErr(...args); append(fmt(args), 'err'); };
+    window.addEventListener('error', e => console.error('Unhandled error', e.message || e));
+  })();
 </script>
 </body>
 </html>
